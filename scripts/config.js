@@ -26,6 +26,16 @@ const weexFactoryPlugin = {
 }
 
 const aliases = require('./alias')
+
+/**
+ * 
+ * 将 web/entry-runtime.js 转为中的 web 转为 
+ * 当前文件路径例如 /home/vue/src/platforms/web (这一步在 alias 初始化中就已经完成) 然后
+ * 拼接上对应的入口文件名称 本例中是 entry-runtime.js (这一步在 builds 对象初始化的时候完成)
+ * 拼接的结果就是完整的用于构建的入口文件, 当然文件路径和名称都是有对应的含义的, 例如本例中拼接出的是:
+ * /home/vue/src/platforms/web/entry-runtime.js 就是 基于 commonjs 模块没有编译器的版本
+ * 也是下方的 builds 的第一个配置文件
+ */
 const resolve = p => {
   const base = p.split('/')[0]
   if (aliases[base]) {

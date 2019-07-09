@@ -33,6 +33,13 @@ export function initLifecycle (vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
+  /**
+   * 利用组件的$parent 引用链向上获取父组件
+   * 一直到获取不到父组件或者父组件是抽象组件才会停止, 此时这个实例就是当前组件的 $root 挂载
+   * 
+   * 另外获取到的第一个父级的 $children 中 push 当前实例
+   * 抽象组件就是那些不会被渲染的组件例如 keep-alive 或者 component
+   */
   let parent = options.parent
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
@@ -43,6 +50,10 @@ export function initLifecycle (vm: Component) {
 
   vm.$parent = parent
   vm.$root = parent ? parent.$root : vm
+
+  /**
+   * 初始化一些变量
+   */
 
   vm.$children = []
   vm.$refs = {}

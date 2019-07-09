@@ -10,8 +10,11 @@ import {
 import { updateListeners } from '../vdom/helpers/index'
 
 export function initEvents (vm: Component) {
+  // 给当前 vm 实例添加_events 用于挂载事件
   vm._events = Object.create(null)
   vm._hasHookEvent = false
+  // 你可能会想为什么还要获取父组件初始化事件呢? 
+  // Vue 实例确实不需要, 但是Vue组件需要, 在初始化的时候就要和绑定父组件的事件
   // init parent attached events
   const listeners = vm.$options._parentListeners
   if (listeners) {

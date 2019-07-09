@@ -21,6 +21,9 @@ export function initMixin (Vue: Class<Component>) {
     let startTag, endTag
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+      /**
+       * 用来记录开发模式下标记组件创建时间
+       */
       startTag = `vue-perf-start:${vm._uid}`
       endTag = `vue-perf-end:${vm._uid}`
       mark(startTag)
@@ -33,6 +36,9 @@ export function initMixin (Vue: Class<Component>) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
+      /**
+       * 暂时不知道是针对动态组件处理还是普通组件
+       */
       initInternalComponent(vm, options)
     } else {
       vm.$options = mergeOptions(
@@ -43,8 +49,15 @@ export function initMixin (Vue: Class<Component>) {
     }
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
+      /**
+       * 在开发模式下 提供一层数据代理 
+       * 当访问的数据或者方法不存在的时候提示错误
+       */
       initProxy(vm)
     } else {
+      /**
+       * 非开发模式下不存在错误提示这层代理也就没有了
+       */
       vm._renderProxy = vm
     }
     // expose real self
@@ -60,6 +73,9 @@ export function initMixin (Vue: Class<Component>) {
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+      /**
+       * 用来标记开发模式下组件创建完成时间
+       */
       vm._name = formatComponentName(vm, false)
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)

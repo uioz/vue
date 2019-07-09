@@ -2205,6 +2205,8 @@
       def$$1 = cur = on[name];
       old = oldOn[name];
       event = normalizeEvent(name);
+
+      debugger;
       if (isUndef(cur)) {
         warn(
           "Invalid handler for event \"" + (event.name) + "\": got " + String(cur),
@@ -3759,6 +3761,8 @@
     vm._hasHookEvent = false;
     // init parent attached events
     var listeners = vm.$options._parentListeners;
+    console.log(vm.$options)
+    debugger;
     if (listeners) {
       updateComponentListeners(vm, listeners);
     }
