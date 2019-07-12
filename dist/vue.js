@@ -2206,13 +2206,13 @@
       old = oldOn[name];
       event = normalizeEvent(name);
 
-      debugger;
       if (isUndef(cur)) {
         warn(
           "Invalid handler for event \"" + (event.name) + "\": got " + String(cur),
           vm
         );
       } else if (isUndef(old)) {
+        debugger;
         if (isUndef(cur.fns)) {
           cur = on[name] = createFnInvoker(cur, vm);
         }

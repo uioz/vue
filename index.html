@@ -8,7 +8,7 @@
   <title>Document</title>
 </head>
 <body>
-  <div id="root"><test @click.once="handleClick"></test></div>
+  <div id="root"><test @click.once="handleClick"></test><button @click.once="handleButtonClick"></button></div>
   <script>
     Vue.component('test',{
       name:'test',
@@ -24,6 +24,9 @@
       methods:{
         handleClick(){
           console.log('click')
+        },
+        handleButtonClick(){
+          console.log('button click')
         }
       }
     })

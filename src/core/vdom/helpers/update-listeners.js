@@ -33,6 +33,9 @@ const normalizeEvent = cached((name: string): {
   }
 })
 
+/**
+ * 
+ */
 export function createFnInvoker (fns: Function | Array<Function>, vm: ?Component): Function {
   function invoker () {
     const fns = invoker.fns
@@ -97,16 +100,20 @@ export function updateListeners (
         `Invalid handler for event "${event.name}": got ` + String(cur),
         vm
       )
+    // 没有旧的事件
     } else if (isUndef(old)) {
-      // 不存在 oldOn[name] 也没有 on[name].fns
-      // 那么就是初次创建的
-      // TODO 继续
+      // 没有 createFnInvoker 的标记
+      // 将 cur 这个事件监听器替换为 createFnInvoker 创建一层外壳
+      // 这个返回的 cur.fns 是原来的事件监听器
+      // 之所以这样设计不直接使用原来的钩子, 目前猜测是为了可以添加多个事件在一个事件钩子上
       if (isUndef(cur.fns)) {
         cur = on[name] = createFnInvoker(cur, vm)
       }
+      // 处理添加了 once 修饰符的事件, 不要忘记了 createOnceHandler 是由外部传入到本函数中的
       if (isTrue(event.once)) {
         cur = on[name] = createOnceHandler(event.name, cur, event.capture)
       }
+      // 添加事件到元素身上, 不要忘记了这个函数是外部提供的
       add(event.name, cur, event.capture, event.passive, event.params)
     } else if (cur !== old) {
       old.fns = cur

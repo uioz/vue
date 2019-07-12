@@ -15,9 +15,10 @@ export function initEvents (vm: Component) {
   vm._hasHookEvent = false
   // 你可能会想为什么还要获取父组件初始化事件呢? 
   // Vue 实例确实不需要, 但是Vue组件需要, 在初始化的时候就要和绑定父组件的事件
-  // init parent attached events
   const listeners = vm.$options._parentListeners
   if (listeners) {
+    // 在被模板上显式的被父组件添加了方法后
+    // 组件会执行下方的逻辑
     updateComponentListeners(vm, listeners)
   }
 }
