@@ -34,7 +34,11 @@ const normalizeEvent = cached((name: string): {
 })
 
 /**
- * 
+ * 该函数返回一个函数, 主要的功能是允许一个 @click 绑定的事件上
+ * 添加多个触发器
+ * 返回的函数被调用时候会自动触发每一个事件监听器
+ * @param {function} fns 事件监听器也就是绑定在组件上的那个
+ * @param {Object} vm  vm实例
  */
 export function createFnInvoker (fns: Function | Array<Function>, vm: ?Component): Function {
   function invoker () {
@@ -91,7 +95,7 @@ export function updateListeners (
 
     /**
      * @example
-     * // 如果没有提供对于的方法体
+     * // 向下方这样提供了方法体但是没有提供对应的方法, 例如
      * <div @click="handleClick"></div>
      * // 下方代码会提示错误
      */
@@ -115,12 +119,22 @@ export function updateListeners (
       }
       // 添加事件到元素身上, 不要忘记了这个函数是外部提供的
       add(event.name, cur, event.capture, event.passive, event.params)
+      // cur 是父元素提供的事件钩子, 不要忘记了这个函数是用于更新事件的
+      // 所以 cur 也是被更新后的组件的事件钩子, old 钩子是被包装过的
+      // 如果是组件的事件监听器发生了变化, 那么 cur 一定不和 old 相等的
     } else if (cur !== old) {
+      // 此时将 cur 挂载到 old.fns 上
+      // 然后在挂载到新的监听器上
+      // old 是 createFnInvoker 返回的一层包装
+      // 主要功能是允许多个触发器触发一个事件监听器
+      // 事件监听器也就是 old.fns
       old.fns = cur
       on[name] = old
     }
   }
-  // 移除所有的旧的事件
+  // 上面的一次迭代已经更新了新的事件挂载点上的所有的事件
+  // 下面的这次迭代主要的作用是将旧的事件挂载点中不存在的事件
+  // 进行移除
   for (name in oldOn) {
     if (isUndef(on[name])) {
       event = normalizeEvent(name)
