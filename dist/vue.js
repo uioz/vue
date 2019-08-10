@@ -2212,7 +2212,6 @@
           vm
         );
       } else if (isUndef(old)) {
-        debugger;
         if (isUndef(cur.fns)) {
           cur = on[name] = createFnInvoker(cur, vm);
         }
@@ -3761,8 +3760,6 @@
     vm._hasHookEvent = false;
     // init parent attached events
     var listeners = vm.$options._parentListeners;
-    console.log(vm.$options)
-    debugger;
     if (listeners) {
       updateComponentListeners(vm, listeners);
     }
@@ -4992,6 +4989,7 @@
       vm._self = vm;
       initLifecycle(vm);
       initEvents(vm);
+      // debugger;
       initRender(vm);
       callHook(vm, 'beforeCreate');
       initInjections(vm); // resolve injections before data/props
@@ -5033,6 +5031,7 @@
 
   function resolveConstructorOptions (Ctor) {
     var options = Ctor.options;
+    debugger;
     if (Ctor.super) {
       var superOptions = resolveConstructorOptions(Ctor.super);
       var cachedSuperOptions = Ctor.superOptions;

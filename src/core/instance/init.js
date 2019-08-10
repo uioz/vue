@@ -15,7 +15,7 @@ let uid = 0
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
-    // a uid
+    // 全局唯一组件标识
     vm._uid = uid++
 
     let startTag, endTag
@@ -29,18 +29,17 @@ export function initMixin (Vue: Class<Component>) {
       mark(startTag)
     }
 
-    // a flag to avoid this being observed
+    // 一个避免被响应式监听的 flag`
     vm._isVue = true
-    // merge options
-    if (options && options._isComponent) {
+
+    // 合并传入的选项
+    if (options && options._isComponent) { // 处理组件
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
-      /**
-       * 暂时不知道是针对动态组件处理还是普通组件
-       */
       initInternalComponent(vm, options)
     } else {
+      // 处理 Vue 实例
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
@@ -66,6 +65,7 @@ export function initMixin (Vue: Class<Component>) {
     initLifecycle(vm)
     // 初始化事件有关的内容
     initEvents(vm)
+    // 
     initRender(vm)
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props

@@ -19,7 +19,7 @@ import { patch } from './patch'
 import platformDirectives from './directives/index'
 import platformComponents from './components/index'
 
-// install platform specific utils
+// 挂载不同平台下的工具
 Vue.config.mustUseProp = mustUseProp
 Vue.config.isReservedTag = isReservedTag
 Vue.config.isReservedAttr = isReservedAttr
