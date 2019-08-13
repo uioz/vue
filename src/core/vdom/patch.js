@@ -71,8 +71,30 @@ export function createPatchFunction (backend) {
   let i, j
   const cbs = {}
 
+  /**
+   * nodeOps 中存放都是 docuemnt 操作的包装函数
+   * modules 中都是针对 vdom 的功能函数
+   * modules 的数据结构如下
+   * [
+   *  {
+   *    update:xxx,
+   *    create:xxx
+   *  },
+   *  ...
+   * ]
+   */
   const { modules, nodeOps } = backend
 
+  /**
+   * 这个流程是将 modules 中和当前对应钩子名称相同的内容
+   * 压入到 cbs 上同名的键中
+   * 可能的数据结构如下:
+   * {
+   *   create:[function(),...],
+   *   update:[function(),...],
+   *   ...
+   * }
+   */
   for (i = 0; i < hooks.length; ++i) {
     cbs[hooks[i]] = []
     for (j = 0; j < modules.length; ++j) {
@@ -590,6 +612,11 @@ export function createPatchFunction (backend) {
   // are already rendered on the client or has no need for initialization
   // Note: style is excluded because it relies on initial clone for future
   // deep updates (#7063).
+  /**
+   * TODO 待验证
+   * 在 create 钩子中下列的模块会被跳过 "混合"(指的是组件上的属性转为 vdom 中的属性这一过程)
+   * 因为这些数据映射到真实的 DOM 上的时候会被浏览器自动渲染
+   */
   const isRenderedModule = makeMap('attrs,class,staticClass,staticStyle,key')
 
   // Note: this is a browser-only function so we can assume elms are DOM nodes.
@@ -697,6 +724,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // 闭包返回 patch 函数
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)

@@ -26,14 +26,14 @@ Vue.config.isReservedAttr = isReservedAttr
 Vue.config.getTagNamespace = getTagNamespace
 Vue.config.isUnknownElement = isUnknownElement
 
-// install platform runtime directives & components
+// 向平台运行时挂载全局指令和组件
 extend(Vue.options.directives, platformDirectives)
 extend(Vue.options.components, platformComponents)
 
-// install platform patch function
+// 根据打包目标挂载 __path__ 函数
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
-// public mount method
+// 添加挂载方法
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
@@ -42,8 +42,7 @@ Vue.prototype.$mount = function (
   return mountComponent(this, el, hydrating)
 }
 
-// devtools global hook
-/* istanbul ignore next */
+// 在浏览器中关联 devtool
 if (inBrowser) {
   setTimeout(() => {
     if (config.devtools) {

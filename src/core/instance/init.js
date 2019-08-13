@@ -29,19 +29,23 @@ export function initMixin (Vue: Class<Component>) {
       mark(startTag)
     }
 
-    // 一个避免被响应式监听的 flag`
+    // 一个防止vm实例自身被响应式数据监听的 flag
     vm._isVue = true
 
-    // 合并传入的选项
+    /**
+     * TOOD 待证实
+     * 处理 options 的问题, options 是 Vue 构造函数上的一个原型属性
+     * 用于保存全局注册的组件 指令 等.
+     */
     if (options && options._isComponent) { // 处理组件
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
-      // 处理 Vue 实例
+      // 将全局 Vue 构造函数上的 options 和传入的 options 进行合并
       vm.$options = mergeOptions(
-        resolveConstructorOptions(vm.constructor),
+        resolveConstructorOptions(vm.constructor), // resolveConstructorOptions 处理了使用了 extends 情况下的 options
         options || {},
         vm
       )
@@ -110,6 +114,11 @@ export function initInternalComponent (vm: Component, options: InternalComponent
 
 export function resolveConstructorOptions (Ctor: Class<Component>) {
   let options = Ctor.options
+  /**
+   * TODO 待验证
+   * 使用 Vue.extends 或者添加 extends 选项的时候, 父元素中会存在 super 属性, 所以常见的 Vue 实例不会走这个环节
+   * if 内部的代码目的是合并父类的 options 和 子类的 options
+   */
   if (Ctor.super) {
     const superOptions = resolveConstructorOptions(Ctor.super)
     const cachedSuperOptions = Ctor.superOptions

@@ -292,8 +292,8 @@ export function validateComponentName (name: string) {
 }
 
 /**
- * Ensure all props option syntax are normalized into the
- * Object-based format.
+ * 格式化 props 中的参数名称
+ * 将 [xx-x,xxxx] 或者 {xxxx:xxxx,xx-x:xxxx} 中使用连字符格式化为 xxX.
  */
 function normalizeProps (options: Object, vm: ?Component) {
   const props = options.props
@@ -382,23 +382,31 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
 }
 
 /**
- * Merge two option objects into a new one.
- * Core utility used in both instantiation and inheritance.
+ * 将两个配置选项合并成一个新的.
+ * 可以合并实例化或者继承的options.
  */
 export function mergeOptions (
   parent: Object,
   child: Object,
   vm?: Component
 ): Object {
+  // 在开发环境下
+  // 检测注册的组件名称是否合法
   if (process.env.NODE_ENV !== 'production') {
     checkComponents(child)
   }
 
+  /**
+   * TODO 待证实
+   * 未知功能, 用于函数组件, 还是继承组件?
+   */
   if (typeof child === 'function') {
     child = child.options
   }
 
+  // 格式化 props 的命名短线命名格式化为驼峰
   normalizeProps(child, vm)
+  // 格式化 inject 命名
   normalizeInject(child, vm)
   normalizeDirectives(child)
 
