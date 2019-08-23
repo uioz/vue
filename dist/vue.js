@@ -1539,6 +1539,7 @@
     // but only if it is a raw options object that isn't
     // the result of another mergeOptions call.
     // Only merged options has the _base property.
+    debugger;
     if (!child._base) {
       if (child.extends) {
         parent = mergeOptions(parent, child.extends, vm);
@@ -5840,7 +5841,7 @@
   }
 
   function createPatchFunction (backend) {
-    debugger;
+
     var i, j;
     var cbs = {};
 

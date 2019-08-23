@@ -22,9 +22,8 @@ import {
 } from 'shared/util'
 
 /**
- * Option overwriting strategies are functions that handle
- * how to merge a parent option value and a child option
- * value into the final value.
+ * 一个值由函数组成的对象, 函数控制如何合并父元素的选项和子元素的选项
+ * 然后生成一个最终的一个选项对象.
  */
 const strats = config.optionMergeStrategies
 
@@ -408,12 +407,16 @@ export function mergeOptions (
   normalizeProps(child, vm)
   // 格式化 inject 命名
   normalizeInject(child, vm)
+  // 规范化 directives 指令, 将纯函数的转为对象格式
   normalizeDirectives(child)
 
   // Apply extends and mixins on the child options,
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
+  // 将扩展(extends) 和 mixins 合并到子组件的 options 上
+  // TODO 待证实
+  // 一个 new Vue(options) 实例是不会走内部的 if 判断的
   if (!child._base) {
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
@@ -425,6 +428,7 @@ export function mergeOptions (
     }
   }
 
+  // 
   const options = {}
   let key
   for (key in parent) {
@@ -435,6 +439,10 @@ export function mergeOptions (
       mergeField(key)
     }
   }
+
+  // 合并 options 上的字段
+  // 对于 Vue 实例来说 new Vue({}) 传入的参数和 Vue 全局实例进行合并
+  // Vue 实例上的所有字段都有对应的合并方法规则存在于 strats 对象上
   function mergeField (key) {
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)
