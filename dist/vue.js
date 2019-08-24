@@ -4990,7 +4990,6 @@
       vm._self = vm;
       initLifecycle(vm);
       initEvents(vm);
-      // debugger;
       initRender(vm);
       callHook(vm, 'beforeCreate');
       initInjections(vm); // resolve injections before data/props

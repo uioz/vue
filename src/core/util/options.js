@@ -73,13 +73,14 @@ function mergeData (to: Object, from: ?Object): Object {
 }
 
 /**
- * Data
+ * 初始化过程中用于合并父子元素 data
  */
 export function mergeDataOrFn (
   parentVal: any,
   childVal: any,
   vm?: Component
 ): ?Function {
+  // 组件合并逻辑
   if (!vm) {
     // in a Vue.extend merge, both should be functions
     if (!childVal) {
@@ -100,6 +101,9 @@ export function mergeDataOrFn (
       )
     }
   } else {
+    /**
+     * 返回的函数实际上是 data 在接入响应式前的初始化
+     */
     return function mergedInstanceDataFn () {
       // instance merge
       const instanceData = typeof childVal === 'function'
@@ -117,12 +121,17 @@ export function mergeDataOrFn (
   }
 }
 
+/**
+ * options 合并策略用于 data 属性
+ */
 strats.data = function (
   parentVal: any,
   childVal: any,
   vm?: Component
 ): ?Function {
+  // 没有 vm 说明就是组件
   if (!vm) {
+    // 组件的 data 必须是 function
     if (childVal && typeof childVal !== 'function') {
       process.env.NODE_ENV !== 'production' && warn(
         'The "data" option should be a function ' +
@@ -235,7 +244,7 @@ strats.watch = function (
 }
 
 /**
- * Other object hashes.
+ * options 合并策略用于 props methods inject computed 属性
  */
 strats.props =
 strats.methods =
@@ -246,12 +255,19 @@ strats.computed = function (
   vm?: Component,
   key: string
 ): ?Object {
+  // 开发模式下的检测, 检测是否为对象
   if (childVal && process.env.NODE_ENV !== 'production') {
     assertObjectType(key, childVal, vm)
   }
+  /**
+   * 如果没有父元素没有对应的属性, 说明是 Vue 实例创建
+   * 直接返回原有的子属性就可以了
+   */
   if (!parentVal) return childVal
+  // 创建一个空对象, 把父元素上的属性拷贝到上面去
   const ret = Object.create(null)
   extend(ret, parentVal)
+  // 再次使用子元素上的属性进行覆盖
   if (childVal) extend(ret, childVal)
   return ret
 }
@@ -329,7 +345,7 @@ function normalizeProps (options: Object, vm: ?Component) {
 }
 
 /**
- * Normalize all injections into Object-based format
+ * 初始化中进行格式化注入(inject)上的函数名称, 以及在开发状态下的格式校验
  */
 function normalizeInject (options: Object, vm: ?Component) {
   const inject = options.inject
@@ -356,7 +372,7 @@ function normalizeInject (options: Object, vm: ?Component) {
 }
 
 /**
- * Normalize raw function directives into object format.
+ * 格式化指令(Directives)命名规范
  */
 function normalizeDirectives (options: Object) {
   const dirs = options.directives
@@ -370,6 +386,9 @@ function normalizeDirectives (options: Object) {
   }
 }
 
+/**
+ * 用于检查给定对象上的键对应的值是否是对象
+ */
 function assertObjectType (name: string, value: any, vm: ?Component) {
   if (!isPlainObject(value)) {
     warn(
@@ -428,21 +447,22 @@ export function mergeOptions (
     }
   }
 
-  // 
   const options = {}
   let key
+  // 迭代父元素的 options 对象(对于一个Vue实例来说他的 options)是 Vue 构造函数上的 options
+  // 和子元素的 options 进行合并
   for (key in parent) {
     mergeField(key)
   }
+  // 迭代子元素, 合并那些父元素 options 中没有的键
   for (key in child) {
     if (!hasOwn(parent, key)) {
       mergeField(key)
     }
   }
 
-  // 合并 options 上的字段
-  // 对于 Vue 实例来说 new Vue({}) 传入的参数和 Vue 全局实例进行合并
-  // Vue 实例上的所有字段都有对应的合并方法规则存在于 strats 对象上
+  // options 上的不同的键有不同的合并方法
+  // 这个函数中提供了所有的键的合并策略
   function mergeField (key) {
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)
