@@ -402,6 +402,11 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
 /**
  * 将两个配置选项合并成一个新的.
  * 可以合并实例化或者继承的options.
+ * 
+ * 分为三种情况
+ * 1. 合并 extends 的组件
+ * 2. 合并实例和组件
+ * 3. 合并实例
  */
 export function mergeOptions (
   parent: Object,
