@@ -111,8 +111,8 @@
   }
 
   /**
-   * Make a map and return a function for checking if a key
-   * is in that map.
+   * 调用后创建一个 Map 存储键，返回一个函数调用后传入参数
+   * 用于判断参数是否在 Map 中，相当于 Set.has(val)
    */
   function makeMap (
     str,
