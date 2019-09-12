@@ -14,11 +14,10 @@ export function initEvents (vm: Component) {
   vm._events = Object.create(null)
   vm._hasHookEvent = false
   // 你可能会想为什么还要获取父组件初始化事件呢? 
-  // Vue 实例确实不需要, 但是Vue组件需要, 在初始化的时候就要和绑定父组件的事件
+  // Vue 实例确实不需要所以也不执行, 但是Vue组件需要, 在初始化的时候就要和绑定父组件的事件
   const listeners = vm.$options._parentListeners
+  // 更新组件事件监听器
   if (listeners) {
-    // 在被模板上显式的被父组件添加了方法后
-    // 组件会执行下方的逻辑
     updateComponentListeners(vm, listeners)
   }
 }
@@ -43,11 +42,18 @@ function createOnceHandler (event, fn) {
   }
 }
 
+/**
+ * 更新事件监听器, 将行的事件与旧的合并覆盖
+ * @param {Object} vm Vue 实例或者组件实例
+ * @param {Object}} listeners 事件监听对象
+ * @param {Object}} oldListeners 旧的事件监听对象
+ */
 export function updateComponentListeners (
   vm: Component,
   listeners: Object,
   oldListeners: ?Object
 ) {
+  // 当前作用域的 add 和 remove 引用了 target, 通过赋值到当前作用域中形成闭包引用
   target = vm
   updateListeners(listeners, oldListeners || {}, add, remove, createOnceHandler, vm)
   target = undefined

@@ -16,25 +16,28 @@ import VNode, { createEmptyVNode } from '../vdom/vnode'
 
 import { isUpdatingChildComponent } from './lifecycle'
 
+/**
+ * 
+ * @param {Object} vm Vue 实例或者组件实例
+ */
 export function initRender (vm: Component) {
-  vm._vnode = null // the root of the child tree
-  vm._staticTrees = null // v-once cached trees
+  vm._vnode = null // 子树的根节点
+  vm._staticTrees = null // 用于 v-once 指令的缓存树
   const options = vm.$options
-  const parentVnode = vm.$vnode = options._parentVnode // the placeholder node in parent tree
-  const renderContext = parentVnode && parentVnode.context
+  const parentVnode = vm.$vnode = options._parentVnode // 父节点树中的占位节点 对于一个纯粹的 Vue 实例来说变量的值是 undefined
+  const renderContext = parentVnode && parentVnode.context // 对于一个纯粹的 Vue 实例来说变量的值是 undefined
   vm.$slots = resolveSlots(options._renderChildren, renderContext)
   vm.$scopedSlots = emptyObject
-  // bind the createElement fn to this instance
-  // so that we get proper render context inside it.
-  // args order: tag, data, children, normalizationType, alwaysNormalize
-  // internal version is used by render functions compiled from templates
+  // 将函数 createElement 绑定到vm实例上
+  // 通过这样做可以获取一个含有渲染上下文的渲染函数
+  // 参数顺序: tag, data, children, normalizationType, alwaysNormalize
+  // 内置(编译器)的版本通过 template 编译成 render 函数
   vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
-  // normalization is always applied for the public version, used in
-  // user-written render functions.
+  // 规范化工具始终应用于公共版本(TODO 什么是公共版本?)，用于用户编写的呈现函数。 PS: 启用标志就是 true
   vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
 
-  // $attrs & $listeners are exposed for easier HOC creation.
-  // they need to be reactive so that HOCs using them are always updated
+  // 为了更加容易的创建 HOC(高阶组件) 需要 $attrs & $listeners 对外暴露
+  // 它们必须是响应式的这样 HOC 使用它们的时候总是获取的是最新的内容
   const parentData = parentVnode && parentVnode.data
 
   /* istanbul ignore else */

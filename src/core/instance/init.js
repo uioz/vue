@@ -54,7 +54,7 @@ export function initMixin (Vue: Class<Component>) {
     if (process.env.NODE_ENV !== 'production') {
       /**
        * 在开发模式下 提供一层数据代理 
-       * 当访问的数据或者方法不存在的时候提示错误
+       * 当访问 vm 上的属性时候, 如果数据不存在或者语法错误, 会提示错误
        */
       initProxy(vm)
     } else {
@@ -69,7 +69,14 @@ export function initMixin (Vue: Class<Component>) {
     initLifecycle(vm)
     // 初始化事件有关的内容
     initEvents(vm)
-    // 
+    /**
+     * 初始化渲染, 主要向 vm 实例挂载了如下功能:
+     * 1. $slots
+     * 2. $scopedSlots
+     * 3. _c TODO 等待证明 渲染
+     * 4. $createElement TODO 等待证明 渲染(含有格式化校验用于用户编写的 render 的情况)
+     * 5. 定义 $attrs 和 $listeners 属性为响应式属性, 分为开发模式和生产模式两种(开发模式有错误提示)
+     */
     initRender(vm)
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props

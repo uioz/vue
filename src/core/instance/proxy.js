@@ -56,10 +56,10 @@ if (process.env.NODE_ENV !== 'production') {
    * 1. 用于创建 Proxy 对象的参数, 用于判断指定的键是否存在于 vm 实例(包括原型).
    * 2. 键存在在 vm 实例上 - 返回 true 
    * 3. 键不存在实例上
-   *   - 是系统关键字或者是以 _开头的不存在于 $data 中的键
+   *   - 是系统关键字或者是以 _开头的不存在于 $data 中的键 返回 false
    *   - 不符合上条规则
-   *     - 键存在于 $data 中提示错误 提示访问 $data.xxx 因为响应式系统不会为 _ 或者 $ 开头的属性在vm上添加追踪
-   *     - 键不存在于 $data 中提示错误 提示找不到, 引用但是却未定义
+   *     - 键存在于 $data 中提示错误 提示访问 $data.xxx 因为响应式系统不会为 _ 或者 $ 开头的属性在vm上添加追踪 返回 true
+   *     - 键不存在于 $data 中提示错误 提示找不到, 引用但是却未定义 返回 true
    * 4. 存在键 返回true
    * 
    * target - vm对象
@@ -73,10 +73,16 @@ if (process.env.NODE_ENV !== 'production') {
         if (key in target.$data) warnReservedPrefix(target, key)
         else warnNonPresent(target, key)
       }
-      return has || !isAllowed // TODO BUG !isAllowed 没有存在的意义 has 是 false isAllowed 也是 false 会被前面语句拦截 has 是true 那就没isAllowed 什么事
+      return has || !isAllowed
     }
   }
 
+  /**
+   * - 如果键不存在与 vm实例上
+   *  - 但是存在于 $data 中提示错误 提示访问 $data.xxx 因为响应式系统不会为 _ 或者 $ 开头的属性在vm上添加追踪
+   *  - 键不存在于 $data 中提示错误 提示找不到, 引用但是却未定义
+   * 始终返回键所对应的内容
+   */
   const getHandler = {
     get (target, key) {
       if (typeof key === 'string' && !(key in target)) {
