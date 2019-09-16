@@ -4,11 +4,12 @@
 2. 测试使用插槽和不使用插槽的异同
 3. 测试使用继承
 4. 测试使用混入
+5. dep(src\core\observer\dep.js) 对象和 observe(src\core\observer\index.js) 对象, 以及 defineReactive(src\core\observer\index.js) 的工作原理.
 
 # 上次中断位置
 
-src\core\observer\index.js defineReactive 函数
+src\core\instance\init.js _init 函数
 
 ## 调用栈
 
-Vue.prototype._init -> initRender -> defineReactive -> dep
+Vue.prototype._init -> _init -> callHook(vm, 'beforeCreate')

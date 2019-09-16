@@ -344,8 +344,13 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+/**
+ * 用于调用生命周期钩子
+ * @param {Object} vm 
+ * @param {String} hook 钩子的名称
+ */
 export function callHook (vm: Component, hook: string) {
-  // #7573 disable dep collection when invoking lifecycle hooks
+  // #7573 触发生命周期钩子的时候禁用依赖收集
   pushTarget()
   const handlers = vm.$options[hook]
   const info = `${hook} hook`

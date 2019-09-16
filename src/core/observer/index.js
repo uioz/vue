@@ -131,6 +131,11 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * 在一个对象上定义一个响应式属性
+ * @param {Object} obj 要定义响应式属性的对象
+ * @param {String} key 属性名称
+ * @param {Any} val obj[key] 对应的值
+ * @param {Function} customSetter 自定义 setter 函数
+ * @param {Boolean} shallow 浅层监听
  */
 export function defineReactive (
   obj: Object,
@@ -139,8 +144,9 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+  // 1. 创建一个观察对象
   const dep = new Dep()
-
+  // 停止对定义了属性操作符 configurable:false 的属性进行创建响应式的操作
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
@@ -149,11 +155,15 @@ export function defineReactive (
   // cater for pre-defined getter/setters
   const getter = property && property.get
   const setter = property && property.set
+  // 有 getter 没有 setter 以及调用参数只有两个
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
 
+  // 深拷贝执行 observe(val)
   let childOb = !shallow && observe(val)
+
+  // 2. 通过 Object.defineProperty 给指定的属性定义 get 和 set 创建响应式属性
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
