@@ -33,6 +33,10 @@ export function handleError (err: Error, vm: any, info: string) {
   }
 }
 
+/**
+ * 用于辅助执行的工具函数, 会根据给定的上下文来触发函数.
+ * 并且会拦截错误然后在控制台中格式化后输出.
+ */
 export function invokeWithErrorHandling (
   handler: Function,
   context: any,

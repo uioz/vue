@@ -33,17 +33,19 @@ export function initMixin (Vue: Class<Component>) {
     vm._isVue = true
 
     /**
-     * TOOD 待证实
-     * 处理 options 的问题, options 是 Vue 构造函数上的一个原型属性
-     * 用于保存全局注册的组件 指令 等.
+     * TODO 待证实
+     * 合并组件配置, 子组件和父组件, 继承,混入
      */
-    if (options && options._isComponent) { // 处理组件
+    if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
       // 将全局 Vue 构造函数上的 options 和传入的 options 进行合并
+      /**
+       * Vue 实例选项和 Vue 构造函数配置进行合并
+       */
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor), // resolveConstructorOptions 处理了使用了 extends 情况下的 options
         options || {},
@@ -78,7 +80,14 @@ export function initMixin (Vue: Class<Component>) {
      * 5. 定义 $attrs 和 $listeners 属性为响应式属性, 分为开发模式和生产模式两种(开发模式有错误提示)
      */
     initRender(vm)
+    /**
+     * 调用 beforeCreate 钩子, 此时 vnode 未建立, 响应式未创建
+     * Event 和 lifeCycle 已经创建完成
+     */
     callHook(vm, 'beforeCreate')
+    /**
+     * 初始化注入
+     */
     initInjections(vm) // resolve injections before data/props
     initState(vm)
     initProvide(vm) // resolve provide after data/props

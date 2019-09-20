@@ -13,6 +13,10 @@ export function initProvide (vm: Component) {
   }
 }
 
+/**
+ * 初始化组件的 inject
+ * @param {Object} vm 组件或者Vue实例
+ */
 export function initInjections (vm: Component) {
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
@@ -36,6 +40,11 @@ export function initInjections (vm: Component) {
   }
 }
 
+/**
+ * 获取 inject 指定的参数的实际值, 从父组件 provide 中进行获取
+ * @param {Array<string> | { [key: string]: string | Symbol | Object }} inject 
+ * @param {Object} vm 
+ */
 export function resolveInject (inject: any, vm: Component): ?Object {
   if (inject) {
     // inject is :any because flow is not smart enough to figure out cached
@@ -48,6 +57,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
       const key = keys[i]
       // #6574 in case the inject object is observed...
       if (key === '__ob__') continue
+      // 在合并选项的时候数组类型的 inject ['foobar'] 会被转为对象格式 { foobar:{form:'foobar'} }
       const provideKey = inject[key].from
       let source = vm
       while (source) {

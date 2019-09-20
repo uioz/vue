@@ -2435,6 +2435,7 @@
   }
 
   function initInjections (vm) {
+    debugger;
     var result = resolveInject(vm.$options.inject, vm);
     if (result) {
       toggleObserving(false);
@@ -3479,7 +3480,6 @@
   /*  */
 
   function initRender (vm) {
-    debugger;
     vm._vnode = null; // the root of the child tree
     vm._staticTrees = null; // v-once cached trees
     var options = vm.$options;
@@ -5032,7 +5032,6 @@
 
   function resolveConstructorOptions (Ctor) {
     var options = Ctor.options;
-    debugger;
     if (Ctor.super) {
       var superOptions = resolveConstructorOptions(Ctor.super);
       var cachedSuperOptions = Ctor.superOptions;
@@ -6666,6 +6665,7 @@
   }
 
   function callHook$1 (dir, hook, vnode, oldVnode, isDestroy) {
+    debugger;
     var fn = dir.def && dir.def[hook];
     if (fn) {
       try {

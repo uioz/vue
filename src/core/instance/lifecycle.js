@@ -352,15 +352,22 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
 export function callHook (vm: Component, hook: string) {
   // #7573 触发生命周期钩子的时候禁用依赖收集
   pushTarget()
+  // 获取 handlers 因为会使用 mixins 的关系所以钩子会是一个数组
   const handlers = vm.$options[hook]
   const info = `${hook} hook`
+  // 循环调用钩子
   if (handlers) {
     for (let i = 0, j = handlers.length; i < j; i++) {
+      // 利用错误拦截函数执行钩子
       invokeWithErrorHandling(handlers[i], vm, null, vm, info)
     }
   }
+  // 事件是通过 $on 方法添加的
+  // 如果监听器使用 HOOK($on('hook:beforeDestroy',listener)) 添加事件则 _hasHookEvent 为 true
   if (vm._hasHookEvent) {
+    // 触发这些 Hook
     vm.$emit('hook:' + hook)
   }
+  // 弹出
   popTarget()
 }

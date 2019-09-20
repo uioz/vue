@@ -12,4 +12,4 @@ src\core\instance\init.js _init 函数
 
 ## 调用栈
 
-Vue.prototype._init -> _init -> callHook(vm, 'beforeCreate')
+Vue.prototype._init -> _init -> initInjections -> resolveInject
