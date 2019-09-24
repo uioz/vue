@@ -20,10 +20,12 @@ export function initProvide (vm: Component) {
 export function initInjections (vm: Component) {
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
+    // 停止 Observing
     toggleObserving(false)
+    // 遍历获取的结果, 将对应的属性定义为响应式(已经是响应式的属性不会出现在 result 上)
     Object.keys(result).forEach(key => {
-      /* istanbul ignore else */
       if (process.env.NODE_ENV !== 'production') {
+        // 开发模式下定义的响应式属性如果受到修改则会含有错误提示
         defineReactive(vm, key, result[key], () => {
           warn(
             `Avoid mutating an injected value directly since the changes will be ` +
@@ -33,9 +35,11 @@ export function initInjections (vm: Component) {
           )
         })
       } else {
+        // 非开发模式的下的响应式属性没有错误提示
         defineReactive(vm, key, result[key])
       }
     })
+    // 允许 Observing
     toggleObserving(true)
   }
 }
@@ -56,10 +60,12 @@ export function resolveInject (inject: any, vm: Component): ?Object {
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i]
       // #6574 in case the inject object is observed...
+      // 忽略已经成为响应式的属性
       if (key === '__ob__') continue
       // 在合并选项的时候数组类型的 inject ['foobar'] 会被转为对象格式 { foobar:{form:'foobar'} }
       const provideKey = inject[key].from
       let source = vm
+      // 向上遍历组件的 _provided 直到找到对应的 provided
       while (source) {
         if (source._provided && hasOwn(source._provided, provideKey)) {
           result[key] = source._provided[provideKey]
@@ -67,6 +73,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
         }
         source = source.$parent
       }
+      // 向上遍历后没有找到, 提示没有找到该 key 对应的 provide
       if (!source) {
         if ('default' in inject[key]) {
           const provideDefault = inject[key].default

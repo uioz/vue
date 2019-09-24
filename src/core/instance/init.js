@@ -86,9 +86,13 @@ export function initMixin (Vue: Class<Component>) {
      */
     callHook(vm, 'beforeCreate')
     /**
-     * 初始化注入
+     * 初始化注入 主要将 inject 和 provide 进行关联
      */
     initInjections(vm) // resolve injections before data/props
+    /**
+     * 负责 Vue 实例上有关 状态数据(data)的初始化
+     * 挂载了 vm._watchers
+     */
     initState(vm)
     initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created')

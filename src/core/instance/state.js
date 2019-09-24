@@ -45,6 +45,10 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+/**
+ * 负责 Vue 实例上有关 状态数据(data)的初始化
+ * @param {Object} vm 
+ */
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
@@ -61,6 +65,11 @@ export function initState (vm: Component) {
   }
 }
 
+/**
+ * 
+ * @param {Object} vm 
+ * @param {Object} propsOptions 
+ */
 function initProps (vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {}
   const props = vm._props = {}

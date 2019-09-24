@@ -24,6 +24,10 @@ const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
  */
 export let shouldObserve: boolean = true
 
+/**
+ * 用于控制是否开启或者关闭 observing
+ * @param {Boolean} value 值
+ */
 export function toggleObserving (value: boolean) {
   shouldObserve = value
 }
