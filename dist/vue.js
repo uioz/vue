@@ -2435,7 +2435,6 @@
   }
 
   function initInjections (vm) {
-    debugger;
     var result = resolveInject(vm.$options.inject, vm);
     if (result) {
       toggleObserving(false);
@@ -4632,6 +4631,7 @@
   function initState (vm) {
     vm._watchers = [];
     var opts = vm.$options;
+    debugger;
     if (opts.props) { initProps(vm, opts.props); }
     if (opts.methods) { initMethods(vm, opts.methods); }
     if (opts.data) {

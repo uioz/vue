@@ -13,4 +13,4 @@ src\core\instance\init.js _init 函数
 
 ## 调用栈
 
-Vue.prototype._init -> _init -> initState
+Vue.prototype._init -> _init -> initState -> initProps
