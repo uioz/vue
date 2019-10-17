@@ -4631,6 +4631,7 @@
   function initState (vm) {
     vm._watchers = [];
     var opts = vm.$options;
+    debugger;
     if (opts.props) { initProps(vm, opts.props); }
     if (opts.methods) { initMethods(vm, opts.methods); }
     if (opts.data) {
@@ -5031,7 +5032,6 @@
 
   function resolveConstructorOptions (Ctor) {
     var options = Ctor.options;
-    debugger;
     if (Ctor.super) {
       var superOptions = resolveConstructorOptions(Ctor.super);
       var cachedSuperOptions = Ctor.superOptions;
@@ -6665,6 +6665,7 @@
   }
 
   function callHook$1 (dir, hook, vnode, oldVnode, isDestroy) {
+    debugger;
     var fn = dir.def && dir.def[hook];
     if (fn) {
       try {

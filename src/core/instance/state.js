@@ -45,10 +45,16 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+/**
+ * 负责 Vue 实例上有关 状态数据(data)的初始化
+ * @param {Object} vm 
+ */
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
+  // 如果存在 props 则初始化 props
   if (opts.props) initProps(vm, opts.props)
+  // 如果存在 methods 则初始化 methods
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
     initData(vm)
@@ -61,11 +67,17 @@ export function initState (vm: Component) {
   }
 }
 
+/**
+ * 
+ * @param {Object} vm 
+ * @param {Object} propsOptions 
+ */
 function initProps (vm: Component, propsOptions: Object) {
+  // 获取用于测试的 propsData
   const propsData = vm.$options.propsData || {}
+  // 获取 props, 注意数组类型的 props 在通过 mergeOptions 后变为对象类型
   const props = vm._props = {}
-  // cache prop keys so that future props updates can iterate using Array
-  // instead of dynamic object key enumeration.
+  // 缓存 prop 的键, 在随后的执行中便于迭代使用, 用于替代 Object.keys 动态获取.
   const keys = vm.$options._propKeys = []
   const isRoot = !vm.$parent
   // root instance props should be converted

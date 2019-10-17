@@ -18,6 +18,11 @@
     
     new Vue({
       el:'#root',
+      props:['hello'],
+      beforeCreate(){
+        console.log('hello world')
+      },
+      // inject:['hello'],
       data:{
         message:'hello world'
       },

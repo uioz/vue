@@ -33,17 +33,19 @@ export function initMixin (Vue: Class<Component>) {
     vm._isVue = true
 
     /**
-     * TOOD 待证实
-     * 处理 options 的问题, options 是 Vue 构造函数上的一个原型属性
-     * 用于保存全局注册的组件 指令 等.
+     * TODO 待证实
+     * 合并组件配置, 子组件和父组件, 继承,混入
      */
-    if (options && options._isComponent) { // 处理组件
+    if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
       // 将全局 Vue 构造函数上的 options 和传入的 options 进行合并
+      /**
+       * Vue 实例选项和 Vue 构造函数配置进行合并
+       */
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor), // resolveConstructorOptions 处理了使用了 extends 情况下的 options
         options || {},
@@ -54,7 +56,7 @@ export function initMixin (Vue: Class<Component>) {
     if (process.env.NODE_ENV !== 'production') {
       /**
        * 在开发模式下 提供一层数据代理 
-       * 当访问的数据或者方法不存在的时候提示错误
+       * 当访问 vm 上的属性时候, 如果数据不存在或者语法错误, 会提示错误
        */
       initProxy(vm)
     } else {
@@ -69,10 +71,28 @@ export function initMixin (Vue: Class<Component>) {
     initLifecycle(vm)
     // 初始化事件有关的内容
     initEvents(vm)
-    // 
+    /**
+     * 初始化渲染, 主要向 vm 实例挂载了如下功能:
+     * 1. $slots
+     * 2. $scopedSlots
+     * 3. _c TODO 等待证明 渲染
+     * 4. $createElement TODO 等待证明 渲染(含有格式化校验用于用户编写的 render 的情况)
+     * 5. 定义 $attrs 和 $listeners 属性为响应式属性, 分为开发模式和生产模式两种(开发模式有错误提示)
+     */
     initRender(vm)
+    /**
+     * 调用 beforeCreate 钩子, 此时 vnode 未建立, 响应式未创建
+     * Event 和 lifeCycle 已经创建完成
+     */
     callHook(vm, 'beforeCreate')
+    /**
+     * 初始化注入 主要将 inject 和 provide 进行关联
+     */
     initInjections(vm) // resolve injections before data/props
+    /**
+     * 负责 Vue 实例上有关 状态数据(data)的初始化
+     * 挂载了 vm._watchers
+     */
     initState(vm)
     initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created')
