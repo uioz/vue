@@ -94,7 +94,14 @@ export function initMixin (Vue: Class<Component>) {
      * 挂载了 vm._watchers
      */
     initState(vm)
+    /**
+     * 也就是说 vue 实例来说都是先处理 inject 后才处理 Provide
+     * 挂载 vm._provided 其值为 Provide 提供的最终内容 (Provide 可以是函数)
+     */
     initProvide(vm) // resolve provide after data/props
+    /**
+     * 挂载 vm._data 其值为最终计算后的 data (data可以是函数)
+     */
     callHook(vm, 'created')
 
     /* istanbul ignore if */

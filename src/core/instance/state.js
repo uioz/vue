@@ -121,11 +121,31 @@ function initProps (vm: Component, propsOptions: Object) {
   toggleObserving(true)
 }
 
+/**
+ * 用于初始化 data
+ * @example 实例格式
+ * new Vue({
+ *   data:{
+ *     xxx:'xxx'
+ *   }
+ * })
+ * @example 组件格式
+ * Vue.component('name',{
+ *   data(){
+ *     return {
+ *       xxx:'xxx'
+ *     }
+ *   }
+ * })
+ */
 function initData (vm: Component) {
   let data = vm.$options.data
+  // 挂载 vm._data 其值为最终计算后的 data (data可以是函数)
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
+
+  // 非 object 提示错误
   if (!isPlainObject(data)) {
     data = {}
     process.env.NODE_ENV !== 'production' && warn(
@@ -134,6 +154,7 @@ function initData (vm: Component) {
       vm
     )
   }
+
   // proxy data on instance
   const keys = Object.keys(data)
   const props = vm.$options.props
@@ -141,6 +162,7 @@ function initData (vm: Component) {
   let i = keys.length
   while (i--) {
     const key = keys[i]
+    // data 和 methods 重名警告
     if (process.env.NODE_ENV !== 'production') {
       if (methods && hasOwn(methods, key)) {
         warn(
@@ -149,13 +171,15 @@ function initData (vm: Component) {
         )
       }
     }
+    // data 和 props 重名警告
     if (props && hasOwn(props, key)) {
       process.env.NODE_ENV !== 'production' && warn(
         `The data property "${key}" is already declared as a prop. ` +
         `Use prop default value instead.`,
         vm
       )
-    } else if (!isReserved(key)) {
+
+    } else if (!isReserved(key)) { // 不是 $ 和 _ 开头
       proxy(vm, `_data`, key)
     }
   }
@@ -165,6 +189,7 @@ function initData (vm: Component) {
 
 export function getData (data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
+  // 在初始化期间停止依赖收集, 避免触发多次更新
   pushTarget()
   try {
     return data.call(vm, vm)

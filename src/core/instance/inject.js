@@ -6,7 +6,11 @@ import { defineReactive, toggleObserving } from '../observer/index'
 
 export function initProvide (vm: Component) {
   const provide = vm.$options.provide
+  // 如果传入的选项中存在 provide
   if (provide) {
+    // provide 被要求为一个对象或者返回对象的函数  
+    // 如果是函数就调用它拿到结果赋值到 _provided 上
+    // 在后代组件使用 inject 的时候, 数据源就来自于此
     vm._provided = typeof provide === 'function'
       ? provide.call(vm)
       : provide
