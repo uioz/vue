@@ -90,8 +90,24 @@ export function initMixin (Vue: Class<Component>) {
      */
     initInjections(vm) // resolve injections before data/props
     /**
-     * 负责 Vue 实例上有关 状态数据(data)的初始化
-     * 挂载了 vm._watchers
+     * 初始化状态, 主要负责:
+     * 1. props 初始化, props中的 default和校验函数在此时执行
+     *   1.1 执行后获取到的值赋作为属性挂载到 vm._props 上
+     *   1.2 props 初始化成功的属性定位为响应式属性
+     *   1.3 为 vm 添加一层拦截, 允许使用 this.xxx 来获取 props 上的key.
+     * 2. methods 初始化, 检测 methods 是否为 function
+     *   2.1 检测methods 是否与 props 保留关键字重名
+     *   2.2 绑定函数执行上下文为 vm
+     * 3. data 的初始化
+     *   3.1 如果 data 是工厂模式, 使用 vm 作为上下文调用后获取结果
+     *   3.2 拿到计算完成的 data 挂载到 vm._data 上
+     *   3.3 如果 data 不是 object 抛出错误
+     *   3.4 和 methods 或者 props 或者保留关键字重名警告
+     *   3.5 为 vm 添加一层拦截, 允许使用 this.xxx 来获取 data
+     *   4.6 监听 data
+     * 4. computed 的初始化, 向vm添加 vm._computedWatchers 用于挂载初始化完成的 computed
+     *   4.1 非 SSR 的情况下, 为每一个 computed 属性建立 Watcher 并将结果挂载到 _computedWatchers 上
+     *   4.2 
      */
     initState(vm)
     /**

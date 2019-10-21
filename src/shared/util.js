@@ -208,6 +208,9 @@ function nativeBind (fn: Function, ctx: Object): Function {
   return fn.bind(ctx)
 }
 
+/**
+ * 导出一个 bind 函数, 将 fun.bind(context) 改为 bind(fun,context)
+ */
 export const bind = Function.prototype.bind
   ? nativeBind
   : polyfillBind

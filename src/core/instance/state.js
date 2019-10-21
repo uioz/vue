@@ -58,9 +58,10 @@ export function initState (vm: Component) {
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
     initData(vm)
-  } else {
+  } else { // 如果 data 不存在则跳过了上个分支中不必要的检测, 直接监听 data
     observe(vm._data = {}, true /* asRootData */)
   }
+  // 如果存在 computed 则初始化它
   if (opts.computed) initComputed(vm, opts.computed)
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch)
@@ -203,15 +204,28 @@ export function getData (data: Function, vm: Component): any {
 
 const computedWatcherOptions = { lazy: true }
 
+/**
+ * 
+ */
 function initComputed (vm: Component, computed: Object) {
   // $flow-disable-line
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
+  // 在 SSR 期间 computed 是立即计算 getters
   const isSSR = isServerRendering()
 
   for (const key in computed) {
     const userDef = computed[key]
+    /**
+     * 不要忘了, getter 不仅仅可以是函数, 还可以是下方的代码:
+     * @example
+     * {
+     *   get(){},
+     *   set(){}
+     * }
+     */
     const getter = typeof userDef === 'function' ? userDef : userDef.get
+    // 错误提示
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(
         `Getter is missing for computed property "${key}".`,
@@ -219,6 +233,8 @@ function initComputed (vm: Component, computed: Object) {
       )
     }
 
+    // 在 SSR 的情况下, 将 computed 上的每一个属性
+    // 通过 Watcher 添加到 vm._computedWatchers 上
     if (!isSSR) {
       // create internal watcher for the computed property.
       watchers[key] = new Watcher(
