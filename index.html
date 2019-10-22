@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,34 +8,49 @@
   <script src="./dist/vue.js"></script>
   <title>Document</title>
 </head>
+
 <body>
-  <div id="root"><test @click="handleClick" @click="handleClick"></test><button @click.once="handleButtonClick"></button></div>
+  <div id="root">
+    <!-- <test @click="handleClick" @click="handleClick"></test> -->
+    <button @click.once="handleButtonClick"></button>
+  </div>
   <script>
-    Vue.component('test',{
-      name:'test',
-      template:
-      `<div></div>`
-    })
-    
+    // Vue.component('test', {
+    //   name: 'test',
+    //   template:
+    //     `<div></div>`
+    // })
+
     new Vue({
-      el:'#root',
-      props:['hello'],
-      beforeCreate(){
+      el: '#root',
+      props: ['hello'],
+      beforeCreate() {
         console.log('hello world')
       },
-      // inject:['hello'],
-      data:{
-        message:'hello world'
+      computed:{
+        game(){
+          return this.message;
+        }
       },
-      methods:{
-        handleClick(){
+      // inject:['hello'],
+      data: {
+        message: 'hello world'
+      },
+      watch:{
+        message(value){
+          console.log(value);
+        }
+      },
+      methods: {
+        handleClick() {
           console.log('click')
         },
-        handleButtonClick(){
+        handleButtonClick() {
           console.log('button click')
         }
       }
     })
   </script>
 </body>
+
 </html>

@@ -63,6 +63,7 @@ export function initState (vm: Component) {
   }
   // 如果存在 computed 则初始化它
   if (opts.computed) initComputed(vm, opts.computed)
+  // 如果存在 watch 则初始化它
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch)
   }
@@ -141,7 +142,7 @@ function initProps (vm: Component, propsOptions: Object) {
  */
 function initData (vm: Component) {
   let data = vm.$options.data
-  // 挂载 vm._data 其值为最终计算后的 data (data可以是函数)
+  // 获取 data 中的值,如果传入了data 则此时的data 经过了 mergeOptions 变成了函数
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
@@ -343,6 +344,7 @@ function initMethods (vm: Component, methods: Object) {
 function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
+    // TODO 待证实 经过 mergeOptions 后可能是个数组
     if (Array.isArray(handler)) {
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
@@ -359,13 +361,24 @@ function createWatcher (
   handler: any,
   options?: Object
 ) {
+  /**
+   * handler 作为纯对象可能是如下结构
+   * @example
+   * {
+   *   deep:boolean,
+   *   handler:function,
+   *   immediate:boolean
+   * }
+   */
   if (isPlainObject(handler)) {
     options = handler
     handler = handler.handler
   }
+  // TODO 待证实 未见该分支有作用 $watch 以及 createWatcher 均为见这种分支
   if (typeof handler === 'string') {
     handler = vm[handler]
   }
+  // expOrFn === 要监听的属性名称, handler === 回掉, options === 监听选项
   return vm.$watch(expOrFn, handler, options)
 }
 

@@ -104,10 +104,13 @@ export function initMixin (Vue: Class<Component>) {
      *   3.3 如果 data 不是 object 抛出错误
      *   3.4 和 methods 或者 props 或者保留关键字重名警告
      *   3.5 为 vm 添加一层拦截, 允许使用 this.xxx 来获取 data
-     *   4.6 监听 data
+     *   4.6 对 data(vm._data) 执行 observe()
      * 4. computed 的初始化, 向vm添加 vm._computedWatchers 用于挂载初始化完成的 computed
-     *   4.1 非 SSR 的情况下, 为每一个 computed 属性建立 Watcher 并将结果挂载到 _computedWatchers 上
-     *   4.2 
+     *   4.1 非 SSR 的情况下, 为每一个 computed 属性通过 Watcher 包装并将结果挂载到 _computedWatchers 上
+     *   4.2 通过 defineComputed 允许通过 this.xxx 来获取数据
+     *     4.2.1 SSR 模式下 computed 会直接获取数据
+     *     4.2.2 非 SSR 模式下, computed 会利用 Watcher 进行缓存处理
+     * 5. watcher 的初始化, 遍历 watch 后调用 vm.$watch 建立监听
      */
     initState(vm)
     /**
