@@ -149,16 +149,28 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+/**
+ * 挂载组件.
+ * 挂载 vm.$el 属性为挂载点
+ */
 export function mountComponent (
   vm: Component,
   el: ?Element,
   hydrating?: boolean
 ): Component {
   vm.$el = el
+  // 如果没有 render 函数, 在很大程度上说明组件是
+  // 通过 template 来建立结构的
   if (!vm.$options.render) {
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
-      /* istanbul ignore if */
+      /**
+       * 在使用未包含编译器的 Vue 中  
+       * 使用 template 则提示错误  
+       * **注意**: 
+       * 带有编译器(compiler)的版本是在部分方法的实现是不同的, 带有编译器的版本是不会执行这部分代码的, 它有单独的实现.  
+       * 简单来讲在挂载前通过编译器将 template 转为了 render 函数.
+       */
       if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
         vm.$options.el || el) {
         warn(
@@ -352,13 +364,13 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
 export function callHook (vm: Component, hook: string) {
   // #7573 触发生命周期钩子的时候禁用依赖收集
   pushTarget()
-  // 获取 handlers 因为会使用 mixins 的关系所以钩子会是一个数组
+  // 获取 handlers 经过 mergeOptions 的处理后此时的钩子是数组, 例如使用过 mixins 后可以存在多个钩子
   const handlers = vm.$options[hook]
   const info = `${hook} hook`
   // 循环调用钩子
   if (handlers) {
     for (let i = 0, j = handlers.length; i < j; i++) {
-      // 利用错误拦截函数执行钩子
+      // 通过含有错误拦截的函数来执行钩子
       invokeWithErrorHandling(handlers[i], vm, null, vm, info)
     }
   }

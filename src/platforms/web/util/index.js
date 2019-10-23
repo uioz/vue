@@ -7,7 +7,7 @@ export * from './class'
 export * from './element'
 
 /**
- * Query an element selector if it's not an element already.
+ * 如果给定的元素不是一个 element 对象, 则通过 querySelector 来找到这个对象
  */
 export function query (el: string | Element): Element {
   if (typeof el === 'string') {

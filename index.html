@@ -37,8 +37,12 @@
         message: 'hello world'
       },
       watch:{
-        message(value){
-          console.log(value);
+        message:{
+          deep:true,
+          immediate:true,
+          handler(value){
+            console.log(value);
+          }
         }
       },
       methods: {

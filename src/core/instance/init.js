@@ -91,6 +91,8 @@ export function initMixin (Vue: Class<Component>) {
     initInjections(vm) // resolve injections before data/props
     /**
      * 初始化状态, 主要负责:
+     * 挂载 vm._watchers 为后续的 Watcher 的保存做准备
+     * 
      * 1. props 初始化, props中的 default和校验函数在此时执行
      *   1.1 执行后获取到的值赋作为属性挂载到 vm._props 上
      *   1.2 props 初始化成功的属性定位为响应式属性
@@ -110,7 +112,8 @@ export function initMixin (Vue: Class<Component>) {
      *   4.2 通过 defineComputed 允许通过 this.xxx 来获取数据
      *     4.2.1 SSR 模式下 computed 会直接获取数据
      *     4.2.2 非 SSR 模式下, computed 会利用 Watcher 进行缓存处理
-     * 5. watcher 的初始化, 遍历 watch 后调用 vm.$watch 建立监听
+     * 5. watcher 的初始化, 遍历 watch 对其属性调用 vm.$watch 建立包装
+     *   5.1 如果 watch 传入的是对象格式且包含 immediate 则会在初始化 Watcher 后立即调用 handler 一次
      */
     initState(vm)
     /**
@@ -133,7 +136,18 @@ export function initMixin (Vue: Class<Component>) {
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
+    /**
+     * @example 在下列情况下执行
+     * new Vue({
+     *   el:'#root'
+     * })
+     */
     if (vm.$options.el) {
+      // 不要忘记了这个函数实在运行时调用的
+      // 而 vm.$mount 是通过外部包装添加的  
+      // 根据构建目标的不同实现也不同, 例如在 runtime 版本(src\platforms\web\runtime\index.js)中  
+      // 没有编译器, 创建Vue实例参数中传入 template 会报错, 而在含有编译器版本中
+      // vm.$mount 前会将 template 编译成 render 函数
       vm.$mount(vm.$options.el)
     }
   }

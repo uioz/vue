@@ -6,6 +6,9 @@
 4. 测试使用混入
 5. dep(src\core\observer\dep.js) 对象和 observe(src\core\observer\index.js) 对象, 以及 defineReactive(src\core\observer\index.js) 的工作原理.
 6. 测试 props 数组与对象的解析, 包括合并方式.
+7. Watcher 构造函数
+8. Observe 构造函数
+9. defineReactive 函数
 
 # 上次中断位置
 
