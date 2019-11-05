@@ -137,6 +137,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     /**
+     * 如果 Vue 实例在实例化时没有收到 el 选项，则它处于“未挂载”状态，没有关联的 DOM 元素。可以使用 vm.$mount() 手动地挂载一个未挂载的实例。
      * @example 在下列情况下执行
      * new Vue({
      *   el:'#root'
@@ -146,7 +147,7 @@ export function initMixin (Vue: Class<Component>) {
       // 不要忘记了这个函数实在运行时调用的
       // 而 vm.$mount 是通过外部包装添加的  
       // 根据构建目标的不同实现也不同, 例如在 runtime 版本(src\platforms\web\runtime\index.js)中  
-      // 没有编译器, 创建Vue实例参数中传入 template 会报错, 而在含有编译器版本中
+      // 没有编译器, 创建Vue实例参数中传入 template 会报错, 而在含有编译器版本中(src\platforms\web\entry-runtime-with-compiler.js)
       // vm.$mount 前会将 template 编译成 render 函数
       vm.$mount(vm.$options.el)
     }

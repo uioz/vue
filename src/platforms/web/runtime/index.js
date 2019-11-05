@@ -41,6 +41,7 @@ Vue.prototype.$mount = function (
   // 拿到元素
   el = el && inBrowser ? query(el) : undefined
   // 挂载组件
+  // 通过 lifecycle 导出调用, 是为了调用生命周期钩子
   return mountComponent(this, el, hydrating)
 }
 

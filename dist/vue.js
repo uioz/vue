@@ -4870,7 +4870,6 @@
   }
 
   function initWatch (vm, watch) {
-    debugger;
     for (var key in watch) {
       var handler = watch[key];
       if (Array.isArray(handler)) {
@@ -6665,7 +6664,6 @@
   }
 
   function callHook$1 (dir, hook, vnode, oldVnode, isDestroy) {
-    debugger;
     var fn = dir.def && dir.def[hook];
     if (fn) {
       try {

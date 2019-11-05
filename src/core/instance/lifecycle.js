@@ -159,8 +159,10 @@ export function mountComponent (
   hydrating?: boolean
 ): Component {
   vm.$el = el
-  // 如果没有 render 函数, 在很大程度上说明组件是
-  // 通过 template 来建立结构的
+  // 这里要通过 render 函数来进行渲染
+  // 如果未添加 render 则很有可能使用了 template
+  // 在没有编译器的版本中, mountComponent 会在 vm.$mount 中直接调用
+  // 在含有编译器的版本中, mountComponent 执行前会将 template 转为 render
   if (!vm.$options.render) {
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
