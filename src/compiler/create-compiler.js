@@ -4,8 +4,19 @@ import { extend } from 'shared/util'
 import { detectErrors } from './error-detector'
 import { createCompileToFunctionFn } from './to-function'
 
+/**
+ * 该函数返回一个函数构成一个闭包, 通过依赖注入的方式提供基本编译函数.  
+ * TODO: 待证实, 通过基本编译函数可以在不同平台中提供编译阶段优化.  
+ * @param baseCompile 基本编译函数
+ */
 export function createCompilerCreator (baseCompile: Function): Function {
+  /**
+   * 创建编译器, 例如 web 端调用方式:
+   * @example src\platforms\web\compiler\index.js
+   * const { compile, compileToFunctions } = createCompiler(baseOptions)
+   */
   return function createCompiler (baseOptions: CompilerOptions) {
+
     function compile (
       template: string,
       options?: CompilerOptions
@@ -67,6 +78,17 @@ export function createCompilerCreator (baseCompile: Function): Function {
       return compiled
     }
 
+    /**
+     * 返回编译器, 例如 web 端调用方式:
+     * @example src\platforms\web\entry-runtime-with-compiler.js
+     * const { render, staticRenderFns } = compileToFunctions(template, {
+     *  outputSourceRange: process.env.NODE_ENV !== 'production',
+     *  shouldDecodeNewlines,
+     *  shouldDecodeNewlinesForHref,
+     *  delimiters: options.delimiters,
+     *  comments: options.comments
+     * }, this)
+     */
     return {
       compile,
       compileToFunctions: createCompileToFunctionFn(compile)
