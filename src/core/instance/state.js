@@ -143,11 +143,11 @@ function initProps (vm: Component, propsOptions: Object) {
 function initData (vm: Component) {
   let data = vm.$options.data
   // 获取 data 中的值,如果传入了data 则此时的data 经过了 mergeOptions 变成了函数
+  // 为了防止在 beforeCreate 中修改了 vm.$options.data 所以这里继续判断函数然后获取结果
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
 
-  // 非 object 提示错误
   if (!isPlainObject(data)) {
     data = {}
     process.env.NODE_ENV !== 'production' && warn(
