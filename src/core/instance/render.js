@@ -49,7 +49,9 @@ export function initRender (vm: Component) {
       !isUpdatingChildComponent && warn(`$listeners is readonly.`, vm)
     }, true)
   } else {
+    // 定义 $attrs 为不深度监听的响应式属性
     defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, null, true)
+    // 定义 $listeners 为不深度监听的响应式属性
     defineReactive(vm, '$listeners', options._parentListeners || emptyObject, null, true)
   }
 }

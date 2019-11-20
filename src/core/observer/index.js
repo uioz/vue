@@ -147,6 +147,23 @@ function copyAugment(target: Object, src: Object, keys: Array<string>) {
  * @param {any} value 要被监听的数据
  * @param {boolean} asRootData 数据是否是根级数据
  * @returns {Observer} 返回该数据对象的观察实例
+ * 
+ * @example 给定一个数据
+ * const a = {
+ *   b:{
+ *     c:'hello world',
+ *     '__ob__':{
+ *       value:c,
+ *       dep:Dep,
+ *       vmCount:0
+ *     }
+ *   },
+ *   '__ob__':{
+ *     value:a,
+ *     dep:Dep,
+ *     vmCount:0
+ *   }
+ * }
  */
 export function observe(value: any, asRootData: ?boolean): Observer | void {
   // 观察者函数不监听非 Object 以及 VNode 的子类
@@ -178,7 +195,9 @@ export function observe(value: any, asRootData: ?boolean): Observer | void {
 }
 
 /**
- * 在一个对象上定义一个响应式属性
+ * 将给定的对象上的键定义为响应式属性, 值得注意的是函数内部使用了 Object.defineProperty 通过闭包
+ * 引用了对应属性的 dep(依赖收集) value(属性值) 以及如果属性的值是对象的话, 通过 childOb 来引用
+ * 对应对象属性的 Observer 实例.
  * @param {Object} obj 要定义响应式属性的对象
  * @param {String} key 属性名称
  * @param {Any} val obj[key] 对应的值
@@ -193,7 +212,7 @@ export function defineReactive(
   shallow?: boolean
 ) {
 
-  // 1. 创建一个观察对象
+  // 1. 创建一个依赖收集对象, 用于存储依赖
   const dep = new Dep()
 
   // 停止对定义了属性操作符 configurable:false 的属性进行创建响应式的操作
@@ -206,33 +225,60 @@ export function defineReactive(
   const getter = property && property.get
   const setter = property && property.set
   
-  // 有 getter 没有 setter 以及调用参数只有两个(observe.walk() 进入的此方法就是这种情况)
+  // 没有 getter 或者有 setter 以及调用参数只有两个(observe.walk() 进入的此方法就是这种情况)
   if ((!getter || setter) && arguments.length === 2) {
+    // 读取 value 的值
     val = obj[key]
   }
 
-  // shallow 表示浅层监听如果 shallow=false 则表示需要递归监听
+  // shallow 表示浅层监听如果 shallow=falsy 则表示需要递归监听
+  // 默认情况下 shallow = undfined 默认就是深度观测
+  // 另外对于非对象以及数组来说这里返回的是 undefined
+  // 对于对象或者数组来说这里返回的是目标观测对象的观测对象引用(也就是对于的 __ob__ 属性)
   let childOb = !shallow && observe(val)
 
   // 2. 通过 Object.defineProperty 给指定的属性定义 get 和 set 创建响应式属性
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
+    /**
+     * get 拦截器主要进行依赖收集
+     */
     get: function reactiveGetter() {
+      // 1. 属性含有 getter 则调用 getter 来获取数据
+      // 2. 反之获取原有的值 
       const value = getter ? getter.call(obj) : val
+      // Dep.target 中存放的是需要被收集的函数
+      // 需要被依赖收集的函数会挂载到 Dep.target 上
+      // 而 Dep.target 是一个静态属性, 可以被所有的 Dep 实例引用到.  
       if (Dep.target) {
+        // 如果存在函数通知 Dep 去收集依赖
         dep.depend()
+        // 如果存在子属性, 那么就有他对应的 Observe 实例
         if (childOb) {
+          // 让子属性的 '__ob__.dep' 实例也收集这个依赖.  
+          // 这样当子属性修改的时候, 父对象也可以进行响应
           childOb.dep.depend()
+          // 针对数组进行额外处理
           if (Array.isArray(value)) {
             dependArray(value)
           }
         }
       }
+      // 正确的返回 value 原有的值
       return value
     },
+    /**
+     * set 拦截器主要用来通知 "依赖" 数据已经改变
+     */
     set: function reactiveSetter(newVal) {
+      // 1. 属性含有 getter 则调用 getter 来获取数据
+      // 2. 反之获取原有的值 
       const value = getter ? getter.call(obj) : val
+
+      // 新值等于旧的值不通知依赖
+      // 这里处理了 NaN 的情况, NaN 不等于自身, 所以将 NaN 赋值给 NaN 也是不会处理
+      // 反之给非 NaN 的值赋值 NaN, 或者给 NaN 赋值非 NaN 的值是被允许的
       /* eslint-disable no-self-compare */
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
