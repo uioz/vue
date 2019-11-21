@@ -78,8 +78,9 @@ export class Observer {
      */
     def(value, '__ob__', this)
 
-    // 数组和对象的处理方式不同
+    // 处理数组
     if (Array.isArray(value)) {
+      // 判断所在环境中是否可以通过 __proto__ 去访问对象的原型链
       if (hasProto) {
         protoAugment(value, arrayMethods)
       } else {
@@ -221,13 +222,18 @@ export function defineReactive(
     return
   }
 
-  // 获取已经定义了的 getter/setters 如果没有定义值为 false
+  // 获取已经定义了的 getter/setters 如果没有定义值为 undefined
+  // 因为后面会重新定义 getter
   const getter = property && property.get
   const setter = property && property.set
   
-  // 没有 getter 或者有 setter 以及调用参数只有两个(observe.walk() 进入的此方法就是这种情况)
+  // 响应式属性不可以只定义 getter 而不定义 setter, 会导致后面 val === undefined 所以不会对 val 的内容监听
+  // 只定义 getter 而不定义 setter 这意味着这个值是 writable:false 所以 vue 不对其进行观测
+  // 但是如果一个属性既定义了 getter 又定义了 setter 为什么要对其进行观测呢
+  // 因为后面我们通过 Object.defineProperty 重新为这个属性定义了 getter和setter
+  // 重新定义后和定义前这个属性都有 getter/setter 这是符合属性创建的实际情况的
+  // 所以需要监听其
   if ((!getter || setter) && arguments.length === 2) {
-    // 读取 value 的值
     val = obj[key]
   }
 
@@ -283,18 +289,34 @@ export function defineReactive(
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
+
+      // 如果给定了 customSetter 则执行它
+      // Vue 在不允许修改的属性上使用了这个 getter, 例如 $props $attrs
+      // 一旦修改这些数据, 就会在控制台中输出提示
       /* eslint-enable no-self-compare */
       if (process.env.NODE_ENV !== 'production' && customSetter) {
         customSetter()
       }
+      
       // #7981: for accessor properties without setter
+      // 如果这个属性在定义之初就没有定义 setter
+      // 由于通过 Object.defineProperty 为其定义了 setter
+      // 所以这里也不处理 setter 的后续执行, 来模拟初始定义的效果
       if (getter && !setter) return
+
+      // 如果提供了 setter
       if (setter) {
+        // 调用执行
         setter.call(obj, newVal)
       } else {
+        // 闭包中的旧 val 等于新的值
         val = newVal
       }
+      // 对于新加入的属性考虑是否对齐添加观察
+      // ps 在默认的情况下是开启的, 在 data 是如此
+      // 但是在 $attrs 以及 $props 中不是
       childOb = !shallow && observe(newVal)
+      // 通知依赖收集
       dep.notify()
     }
   })
