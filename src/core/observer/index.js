@@ -82,10 +82,20 @@ export class Observer {
     if (Array.isArray(value)) {
       // 判断所在环境中是否可以通过 __proto__ 去访问对象的原型链
       if (hasProto) {
+        // 修改 value 对象的原型链, 令该对象的 __proto__ 为 arrayMethods
+        // arrayMethods 是一个对象, 其 __proto__ 属性是 Array.prototype
+        // 该对象上定义了一些 Array.prototype 中的同名方法这样在执行 Array.prototype 前会执行 arrayMethods 上的同名方法
+        // 这样做的目的在于让这些方法具备触发通知修改的能力
         protoAugment(value, arrayMethods)
       } else {
+        // 如果无法访问 __proto__ 则将 arrayMethods 上的实例方法定义到
+        // 这个数组上作为数组的实例方法
         copyAugment(value, arrayMethods, arrayKeys)
       }
+
+      // 迭代数组后将元素定义为响应式属性
+      // observeArray 会为每一个元素上调用 observe 方法
+      // 这样做的效果就是嵌套的元素都会被定义为响应式属性
       this.observeArray(value)
     } else {
       // 处理对象
@@ -109,6 +119,7 @@ export class Observer {
 
   /**
    * Observe a list of Array items.
+   * observeArray 方法监听给定数组的所有项目
    */
   observeArray(items: Array<any>) {
     for (let i = 0, l = items.length; i < l; i++) {
@@ -240,7 +251,7 @@ export function defineReactive(
   // shallow 表示浅层监听如果 shallow=falsy 则表示需要递归监听
   // 默认情况下 shallow = undfined 默认就是深度观测
   // 另外对于非对象以及数组来说这里返回的是 undefined
-  // 对于对象或者数组来说这里返回的是目标观测对象的观测对象引用(也就是对于的 __ob__ 属性)
+  // 对于对象或者数组来说这里返回的是目标观测对象的观测对象引用(也就是该 value 的 __ob__ 属性)
   let childOb = !shallow && observe(val)
 
   // 2. 通过 Object.defineProperty 给指定的属性定义 get 和 set 创建响应式属性
@@ -258,15 +269,16 @@ export function defineReactive(
       // 需要被依赖收集的函数会挂载到 Dep.target 上
       // 而 Dep.target 是一个静态属性, 可以被所有的 Dep 实例引用到.  
       if (Dep.target) {
-        // 如果存在函数通知 Dep 去收集依赖
+        // 收集依赖
         dep.depend()
         // 如果存在子属性, 那么就有他对应的 Observe 实例
         if (childOb) {
           // 让子属性的 '__ob__.dep' 实例也收集这个依赖.  
-          // 这样当子属性修改的时候, 父对象也可以进行响应
+          // 这样当子属性修改的时候, 可以触发父属性的订阅
           childOb.dep.depend()
           // 针对数组进行额外处理
           if (Array.isArray(value)) {
+            // 递归数组元素, 让所有元素都持有这个依赖
             dependArray(value)
           }
         }
