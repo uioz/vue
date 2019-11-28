@@ -37,6 +37,17 @@ export function toggleObserving(value: boolean) {
  * object. Once attached, the observer converts the target
  * object's property keys into getter/setters that
  * collect dependencies and dispatch updates.
+ * 
+ * Observer类会挂载到每一个被观察的对象身上, 一旦挂载, 原对象上的键(keys)会被转为对应名称的 getter/setter Vue 利用这些 getter/setter
+ * 来实现依赖收集, 以及触发更新.
+ * 
+ * 总得来讲 Observer 工作环节如下 -- 就拿 data 来说:
+ * 1. 为 data 挂载 __ob__ 属性
+ * 2. 迭代 data 上的 key, 将其对应的属性通过 defineReactive 定义为响应式属性
+ *   2.1 如果 key 下的内容是纯对象或者数组则利用对应的 key 获取 value 后创建 Observer (此处是递归)
+ *   2.2 通过 Object.defineProperty 对对象上的属性定义 getter/setter 通过 getter 来进行依赖收集, 通过 setter 来派发更新
+ * 
+ * 
  */
 export class Observer {
   value: any;
@@ -44,15 +55,14 @@ export class Observer {
   vmCount: number; // number of vms that have this object as root $data
 
   constructor(value: any) {
-    // 初始化赋值
+
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
 
     /**
-     * Object.defineProperty 的简写方式, 通过 def 定义的属性
-     * 在默认的情况下是不可枚举的
-     * @example 效果
+     * Object.defineProperty 的简写方式, 通过 def 定义的属性, 在默认函数参数下是不可枚举的
+     * @example 示例
      * const a = {
      *   b:10
      * }
@@ -68,7 +78,7 @@ export class Observer {
      *   }
      * }
      * 
-     * @example 等同于
+     * @example def 调用后的效果等同于
      * Object.defineProperty(value, '__ob__', {
      *   value,
      *   enumerable: false,
@@ -112,7 +122,6 @@ export class Observer {
   walk(obj: Object) {
     const keys = Object.keys(obj)
     for (let i = 0; i < keys.length; i++) {
-      // 定义属性为响应式属性
       defineReactive(obj, keys[i])
     }
   }
@@ -156,6 +165,7 @@ function copyAugment(target: Object, src: Object, keys: Array<string>) {
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
+ * 尝试建立给定对象的观察者实例借助于(Observer 类), 如果建立成功则返回这个对象, 如果传入的对象本身就是观察者实例那么会被直接返回.  
  * @param {any} value 要被监听的数据
  * @param {boolean} asRootData 数据是否是根级数据
  * @returns {Observer} 返回该数据对象的观察实例
@@ -165,7 +175,7 @@ function copyAugment(target: Object, src: Object, keys: Array<string>) {
  *   b:{
  *     c:'hello world',
  *     '__ob__':{
- *       value:c,
+ *       value:b,
  *       dep:Dep,
  *       vmCount:0
  *     }

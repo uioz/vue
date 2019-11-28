@@ -753,6 +753,10 @@
   var targetStack = [];
 
   function pushTarget (target) {
+
+    if(target){
+      debugger;
+    }
     targetStack.push(target);
     Dep.target = target;
   }
@@ -1037,6 +1041,7 @@
       enumerable: true,
       configurable: true,
       get: function reactiveGetter () {
+        debugger;
         var value = getter ? getter.call(obj) : val;
         if (Dep.target) {
           dep.depend();
@@ -1539,7 +1544,6 @@
     // but only if it is a raw options object that isn't
     // the result of another mergeOptions call.
     // Only merged options has the _base property.
-    debugger;
     if (!child._base) {
       if (child.extends) {
         parent = mergeOptions(parent, child.extends, vm);
@@ -4494,6 +4498,7 @@
    * Add a dependency to this directive.
    */
   Watcher.prototype.addDep = function addDep (dep) {
+    debugger;
     var id = dep.id;
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id);
@@ -4584,6 +4589,7 @@
    * Depend on all deps collected by this watcher.
    */
   Watcher.prototype.depend = function depend () {
+    debugger;
     var i = this.deps.length;
     while (i--) {
       this.deps[i].depend();
@@ -4730,6 +4736,7 @@
         proxy(vm, "_data", key);
       }
     }
+    debugger;
     // observe data
     observe(data, true /* asRootData */);
   }
@@ -4827,9 +4834,9 @@
         if (watcher.dirty) {
           watcher.evaluate();
         }
-        if (Dep.target) {
-          watcher.depend();
-        }
+        // if (Dep.target) {
+        //   watcher.depend();
+        // }
         return watcher.value
       }
     }

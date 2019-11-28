@@ -11,8 +11,9 @@
 
 <body>
   <div id="root">
+    {{message}}
     <!-- <test @click="handleClick" @click="handleClick"></test> -->
-    <button @click.once="handleButtonClick"></button>
+    <!-- <button @click.once="handleButtonClick"></button> -->
   </div>
   <script>
     // Vue.component('test', {
@@ -23,36 +24,45 @@
 
     new Vue({
       el: '#root',
-      props: ['hello'],
-      beforeCreate() {
-        console.log('hello world')
-      },
-      computed:{
-        game(){
-          return this.message;
-        }
-      },
+      // props: ['hello'],
+      // beforeCreate() {
+      //   console.log('hello world')
+      // },
+      // computed:{
+      //   game(){
+      //     return this.message;
+      //   }
+      // },
       // inject:['hello'],
       data: {
-        message: 'hello world'
-      },
-      watch:{
-        message:{
-          deep:true,
-          immediate:true,
-          handler(value){
-            console.log(value);
+        message: {
+          game: { // TODO: 在浏览器编译为render后在 eval 中使用 with 进行渲染, 导致断点无法正常拦截到响应式属性中的 getter, 这里修改为渲染函数继续测试
+            test: 'hello world'
           }
         }
       },
-      methods: {
-        handleClick() {
-          console.log('click')
-        },
-        handleButtonClick() {
-          console.log('button click')
-        }
-      }
+      // created() {
+      //   setTimeout(() => {
+      //     this.message.test = 20;
+      //   }, 200);
+      // }
+      // watch:{
+      //   message:{
+      //     deep:true,
+      //     immediate:true,
+      //     handler(value){
+      //       console.log(value);
+      //     }
+      //   }
+      // },
+      // methods: {
+      //   handleClick() {
+      //     console.log('click')
+      //   },
+      //   handleButtonClick() {
+      //     console.log('button click')
+      //   }
+      // }
     })
   </script>
 </body>
