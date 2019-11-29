@@ -281,10 +281,15 @@ export function defineReactive(
       if (Dep.target) {
         // 收集依赖
         dep.depend()
-        // 如果存在子属性, 那么就有他对应的 Observe 实例
+        // 这个键对应的值如果也是可被观察的内容的话
+        // 此处是一个 Observer 实例
         if (childOb) {
-          // 让子属性的 '__ob__.dep' 实例也收集这个依赖.  
-          // 这样当子属性修改的时候, 可以触发父属性的订阅
+          // Observer 实例也有一个 dep 属性, 这里让 Observer 实例
+          // 中的 dep 去收集依赖, 这样一来它就和当前闭包中的 dep 收集的依赖一样了
+          // 之所以这样做是因为 Vue 没有能力去响应嵌套属性中发生的变化
+          // 而 Vue.set 以及 Vue.delete 方法会利用这个 Observer.dep 去触发响应式更新
+          // 如果 a.b 中的 b 发生了变化, a 的监听器是不会触发的, 通过 Vue.set(a,'b',any)
+          // Vue.set 会使用 a.b.__ob__.dep 去派发更新, 让监听 a 的watcher 响应 a.b 发生的变化
           childOb.dep.depend()
           // 针对数组进行额外处理
           if (Array.isArray(value)) {
@@ -334,9 +339,7 @@ export function defineReactive(
         // 闭包中的旧 val 等于新的值
         val = newVal
       }
-      // 对于新加入的属性考虑是否对齐添加观察
-      // ps 在默认的情况下是开启的, 在 data 是如此
-      // 但是在 $attrs 以及 $props 中不是
+      // 观察新加入的属性
       childOb = !shallow && observe(newVal)
       // 通知依赖收集
       dep.notify()
@@ -415,6 +418,12 @@ export function del(target: Array<any> | Object, key: any) {
 /**
  * Collect dependencies on array elements when the array is touched, since
  * we cannot intercept array element access like property getters.
+ * 当 Array 元素被访问到的时候去收集依赖,  
+ * 因为我们无法拦截通过 getter 来拦截数组元素的访问
+ * 这个函数的主要功能是将数组的依赖收集到 Observer.dep 中.
+ * 因为数组通过索引修改内容 a[0] = 10 是无法触发响应式的, 通过将
+ * 依赖收集到 Observer.dep 在通过 Vue.set 以及 Vue.delete 操作可以触发
+ * 响应式更新
  */
 function dependArray(value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {

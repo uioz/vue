@@ -753,10 +753,6 @@
   var targetStack = [];
 
   function pushTarget (target) {
-
-    if(target){
-      debugger;
-    }
     targetStack.push(target);
     Dep.target = target;
   }
@@ -1055,6 +1051,7 @@
         return value
       },
       set: function reactiveSetter (newVal) {
+        debugger;
         var value = getter ? getter.call(obj) : val;
         /* eslint-disable no-self-compare */
         if (newVal === value || (newVal !== newVal && value !== value)) {
@@ -1083,6 +1080,7 @@
    * already exist.
    */
   function set (target, key, val) {
+    debugger;
     if (isUndef(target) || isPrimitive(target)
     ) {
       warn(("Cannot set reactive property on undefined, null, or primitive value: " + ((target))));
@@ -1117,6 +1115,7 @@
    * Delete a property and trigger change if necessary.
    */
   function del (target, key) {
+    debugger;
     if (isUndef(target) || isPrimitive(target)
     ) {
       warn(("Cannot delete reactive property on undefined, null, or primitive value: " + ((target))));
@@ -4498,14 +4497,16 @@
    * Add a dependency to this directive.
    */
   Watcher.prototype.addDep = function addDep (dep) {
-    debugger;
     var id = dep.id;
     if (!this.newDepIds.has(id)) {
+      console.log('watcher ' + this.id + ' to add a dep which id is ' + dep.id)
       this.newDepIds.add(id);
       this.newDeps.push(dep);
       if (!this.depIds.has(id)) {
         dep.addSub(this);
       }
+    }else{
+      console.log('watcher ' + this.id + ' is already have dep which id is ' + dep.id)
     }
   };
 
@@ -4736,7 +4737,6 @@
         proxy(vm, "_data", key);
       }
     }
-    debugger;
     // observe data
     observe(data, true /* asRootData */);
   }

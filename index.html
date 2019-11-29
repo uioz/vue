@@ -11,7 +11,6 @@
 
 <body>
   <div id="root">
-    {{message}}
     <!-- <test @click="handleClick" @click="handleClick"></test> -->
     <!-- <button @click.once="handleButtonClick"></button> -->
   </div>
@@ -36,11 +35,14 @@
       // inject:['hello'],
       data: {
         message: {
-          game: { // TODO: 在浏览器编译为render后在 eval 中使用 with 进行渲染, 导致断点无法正常拦截到响应式属性中的 getter, 这里修改为渲染函数继续测试
+          game: {
             test: 'hello world'
           }
         }
       },
+      render(createElement){
+        return createElement('span',JSON.stringify(this.message));
+      }
       // created() {
       //   setTimeout(() => {
       //     this.message.test = 20;
