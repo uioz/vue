@@ -1106,6 +1106,7 @@
       target[key] = val;
       return val
     }
+    console.log(ob.value === target);
     defineReactive$$1(ob.value, key, val);
     ob.dep.notify();
     return val

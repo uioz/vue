@@ -189,23 +189,30 @@ export function mountComponent (
       }
     }
   }
+
+  // 调用挂载前的钩子
   callHook(vm, 'beforeMount')
 
   let updateComponent
+  // 这里的判断主要是为了非生产环境中向调试工具提供组件的渲染性能信息
   /* istanbul ignore if */
   if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+
     updateComponent = () => {
+      // name = 组件名词 id = 组件全局唯一 id(创建时自增产生)
       const name = vm._name
       const id = vm._uid
       const startTag = `vue-perf-start:${id}`
       const endTag = `vue-perf-end:${id}`
 
       mark(startTag)
+      // 通过 render 来获取 vnode 结构
       const vnode = vm._render()
       mark(endTag)
       measure(`vue ${name} render`, startTag, endTag)
 
       mark(startTag)
+      // 通过 vnode 来更新 DOM
       vm._update(vnode, hydrating)
       mark(endTag)
       measure(`vue ${name} patch`, startTag, endTag)

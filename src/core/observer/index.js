@@ -247,7 +247,7 @@ export function defineReactive(
   // 因为后面会重新定义 getter
   const getter = property && property.get
   const setter = property && property.set
-  
+
   // 响应式属性不可以只定义 getter 而不定义 setter, 会导致后面 val === undefined 所以不会对 val 的内容监听
   // 只定义 getter 而不定义 setter 这意味着这个值是 writable:false 所以 vue 不对其进行观测
   // 但是如果一个属性既定义了 getter 又定义了 setter 为什么要对其进行观测呢
@@ -324,7 +324,7 @@ export function defineReactive(
       if (process.env.NODE_ENV !== 'production' && customSetter) {
         customSetter()
       }
-      
+
       // #7981: for accessor properties without setter
       // 如果这个属性在定义之初就没有定义 setter
       // 由于通过 Object.defineProperty 为其定义了 setter
@@ -351,23 +351,44 @@ export function defineReactive(
  * Set a property on an object. Adds the new property and
  * triggers change notification if the property doesn't
  * already exist.
+ * 这个函数就是 Vue.set 以及 vm.$set 的本体.  
  */
 export function set(target: Array<any> | Object, key: any, val: any): any {
+
+  // 在生产模式下该函数传入的 target 是 undefined null 以及其他的原始类型
+  // 提示错误
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+
+  // 如果是数组且 key 是可以被数组使用的索引项
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 改变数组的长度
+    // 如果不这样做当 key 为 10 的时候, 数组长度为 5
+    // 在这种情况下 splice 是没有效果的
     target.length = Math.max(target.length, key)
+
+    // 通过 splice 方法来向指定的下标中填入元素
     target.splice(key, 1, val)
     return val
   }
+
+  // 如果通过 target[key] 可以直接获取到数据 注意使用的是 in 操作符进行查找
+  // 此时如果 target 的原型链上也拥有这个属性也是会触发更改的
+  // 且该属性不存在于 Object 的原型链上
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
+
+  // 获取目标对象的观察实例 __ob__ 中保存着这个 target 对象的 Observer 实例
   const ob = (target: any).__ob__
+
+  // Vue 的实例上会存在 _isVue 标记, 而一个 Vue 实例的 data 属性本身会在
+  // 初始化的时候向 __ob__.vmCount 写入一个累加的 id
+  // 符合这种情况的时候提示错误, 终止操作
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
@@ -375,29 +396,53 @@ export function set(target: Array<any> | Object, key: any, val: any): any {
     )
     return val
   }
+
+  // 如果 target 本来就没有被观测
+  // 那么就完成一个普通的赋值
   if (!ob) {
     target[key] = val
     return val
   }
+
+  // 走到这一步上就是 target 不存在 key 的时候
+  // 以及 key 是 Object.prototype 上存在的属性
+  // 将其定义为响应式属性 不要忘了 ob.value 引用的实际上就是 target
   defineReactive(ob.value, key, val)
+  // 通知 ob 的依赖们
+  // 此时便到了 ob.dep 发挥作用的时候了
+  // ob.dep 中保留了 target 中的依赖
   ob.dep.notify()
   return val
 }
 
 /**
  * Delete a property and trigger change if necessary.
+ * 这个函数就是 Vue.delete 以及 vm.$delete 的本体.  
  */
 export function del(target: Array<any> | Object, key: any) {
+
+  // 和 Vue.set 同样的逻辑
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+
+  // 如果是数组且 key 是可以被数组使用的索引项
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 通过数组的 target.splice 来移除指定的数组元素
+    // 不要忘记了被观测的数组的 splice 方法已经被 Vue 拦截修改过了
+    // 并不是原始的 Array.splice 方法
     target.splice(key, 1)
     return
   }
+
+  // 获取目标对象的观察实例 __ob__ 中保存着这个 target 对象的 Observer 实例
   const ob = (target: any).__ob__
+
+  // Vue 的实例上会存在 _isVue 标记, 而一个 Vue 实例的 data 属性本身会在
+  // 初始化的时候向 __ob__.vmCount 写入一个累加的 id
+  // 符合这种情况的时候提示错误, 终止操作
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid deleting properties on a Vue instance or its root $data ' +
@@ -405,13 +450,20 @@ export function del(target: Array<any> | Object, key: any) {
     )
     return
   }
+
+  // 删除的对象不在身上则不删除
   if (!hasOwn(target, key)) {
     return
   }
+  // 从对象身上删除该属性
   delete target[key]
+
+  // 如果 target 不是被观测的对象则跳过
   if (!ob) {
     return
   }
+
+  // 通知依赖
   ob.dep.notify()
 }
 

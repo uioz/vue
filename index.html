@@ -35,13 +35,14 @@
       // inject:['hello'],
       data: {
         message: {
-          game: {
-            test: 'hello world'
-          }
+          game: 123
         }
       },
       render(createElement){
         return createElement('span',JSON.stringify(this.message));
+      },
+      created(){
+        this.$set(this.message,'hello',456)
       }
       // created() {
       //   setTimeout(() => {
