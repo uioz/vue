@@ -161,7 +161,7 @@ export function mountComponent (
   vm.$el = el
   // 这里要通过 render 函数来进行渲染
   // 如果未添加 render 则很有可能使用了 template
-  // 在没有编译器的版本中, mountComponent 会在 vm.$mount 中直接调用
+  // 在没有编译器的版本中, mountComponent 会在 vm.$mount 中直接调用 因为 template 已经被编译为了 render
   // 在含有编译器的版本中, mountComponent 执行前会将 template 转为 render
   if (!vm.$options.render) {
     vm.$options.render = createEmptyVNode
@@ -170,7 +170,7 @@ export function mountComponent (
        * 在使用未包含编译器的 Vue 中  
        * 使用 template 则提示错误  
        * **注意**: 
-       * 带有编译器(compiler)的版本是在部分方法的实现是不同的, 带有编译器的版本是不会执行这部分代码的, 它有单独的实现.  
+       * 带有编译器(compiler)的版本是在部分方法的实现是不同的, 带有编译器的版本是不会走这个分支的  
        * 简单来讲在挂载前通过编译器将 template 转为了 render 函数.
        */
       if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
@@ -182,6 +182,8 @@ export function mountComponent (
           vm
         )
       } else {
+        // 由于 render 不存在无法继续执行
+        // 而 render 可以通过编译 <template> 或者直接给定 render 函数
         warn(
           'Failed to mount component: template or render function not defined.',
           vm
@@ -219,6 +221,8 @@ export function mountComponent (
     }
   } else {
     updateComponent = () => {
+      // render 返回虚拟 dom
+      // update 利用虚拟 dom 来渲染为真实 dom
       vm._update(vm._render(), hydrating)
     }
   }
@@ -226,13 +230,22 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // Watcher 将会向 updateComponent 函数进行求值
+  // 而 updateComponent 执行的过程中将会触发依赖收集, 因为 updateComponent
+  // 会执行 render 而 render 中存在对 vm 上被观察对象例如 (data) 的引用
+  // 这里会向 vm._watcher 挂载这个 Watcher 实例, 在 Watcher 的构造函数执行过程中
   new Watcher(vm, updateComponent, noop, {
+    // 数据改变后更新发生前 before 会被执行
     before () {
+      // vm 已经挂载且没有销毁的情况下
+      // 每次数据改变后, 更新发生前
+      // 调用 beforeUpdate 钩子
       if (vm._isMounted && !vm._isDestroyed) {
         callHook(vm, 'beforeUpdate')
       }
     }
   }, true /* isRenderWatcher */)
+
   hydrating = false
 
   // manually mounted instance, call mounted on self
@@ -241,6 +254,7 @@ export function mountComponent (
     vm._isMounted = true
     callHook(vm, 'mounted')
   }
+
   return vm
 }
 

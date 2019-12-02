@@ -42,6 +42,14 @@ export default class Watcher {
   getter: Function;
   value: any;
 
+  /**
+   * 
+   * @param {Vue} vm Vue 实例
+   * @param {string|function} expOrFn 表达式或者函数
+   * @param {function} cb 
+   * @param {object} options 
+   * @param {boolean} isRenderWatcher 用于渲染函数的 Watcher?
+   */
   constructor (
     vm: Component,
     expOrFn: string | Function,
@@ -49,24 +57,29 @@ export default class Watcher {
     options?: ?Object,
     isRenderWatcher?: boolean
   ) {
+
     this.vm = vm
+
     if (isRenderWatcher) {
       vm._watcher = this
     }
+
     vm._watchers.push(this)
-    // options
+    // 将函数选项转为内部成员变量
     if (options) {
-      this.deep = !!options.deep
-      this.user = !!options.user
-      this.lazy = !!options.lazy
-      this.sync = !!options.sync
-      this.before = options.before
+      this.deep = !!options.deep // 是否启动深度观测
+      this.user = !!options.user // (Watcher)是否由用户定义
+      this.lazy = !!options.lazy // 就是 computed 惰性求值
+      this.sync = !!options.sync // 数据发生变化同步求值且执行回调
+      this.before = options.before // 数据变化后更新前的会调用这个钩子
     } else {
+      // 
       this.deep = this.user = this.lazy = this.sync = false
     }
+
     this.cb = cb
     this.id = ++uid // uid for batching
-    this.active = true
+    this.active = true // Watcher 是否激活
     this.dirty = this.lazy // for lazy watchers
     this.deps = []
     this.newDeps = []
