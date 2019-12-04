@@ -232,7 +232,7 @@ export function mountComponent (
   // component's mounted hook), which relies on vm._watcher being already defined
   // Watcher 将会向 updateComponent 函数进行求值
   // 而 updateComponent 执行的过程中将会触发依赖收集, 因为 updateComponent
-  // 会执行 render 而 render 中存在对 vm 上被观察对象例如 (data) 的引用
+  // 会执行 render 而 render 的执行上下文就是 vm(通过更改上下文的方式) 可以引用到 vm 上的响应式属性
   // 这里会向 vm._watcher 挂载这个 Watcher 实例, 在 Watcher 的构造函数执行过程中
   new Watcher(vm, updateComponent, noop, {
     // 数据改变后更新发生前 before 会被执行

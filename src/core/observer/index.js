@@ -275,6 +275,11 @@ export function defineReactive(
       // 1. 属性含有 getter 则调用 getter 来获取数据
       // 2. 反之获取原有的值 
       const value = getter ? getter.call(obj) : val
+      // Dep.target 是哪里来的? dep.depend 收集的依赖在哪里?
+      // 关联 src\core\observer\watcher.js 的 Watcher 类的 get 方法
+      // 没有阅读过 Watcher 源码, 只需要知道这里是依赖收集就可以了
+      // 等阅读完 Watcher 源码后, 在回来继续
+
       // Dep.target 中存放的是需要被收集的函数
       // 需要被依赖收集的函数会挂载到 Dep.target 上
       // 而 Dep.target 是一个静态属性, 可以被所有的 Dep 实例引用到.  

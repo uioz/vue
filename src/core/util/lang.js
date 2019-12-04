@@ -29,6 +29,18 @@ export function def (obj: Object, key: string, val: any, enumerable?: boolean) {
 
 /**
  * Parse simple path.
+ * 
+ * 返回一个闭包, 给定一个对象, 调用并且传入对象, 会返回指定路径下的内容.
+ * 例如: 给定一个 obj 路径是 a.b.c 会返回最终的 c 的值
+ * @example 常用于 watch 上的键名称
+ * new Vue({
+ *   watch:{
+ *     abc:ok,
+ *     $route:ok,
+ *     #123:nope,
+ *     (Up):nope
+ *   }
+ * })
  */
 const bailRE = new RegExp(`[^${unicodeRegExp.source}.$_\\d]`)
 export function parsePath (path: string): any {
