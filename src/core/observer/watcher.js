@@ -46,7 +46,7 @@ export default class Watcher {
    * 
    * @param {Vue} vm Vue 实例
    * @param {string|function} expOrFn 表达式或者函数
-   * @param {function} cb 
+   * @param {function} cb 就是 watch api 中提供的回调函数(或者是 handler) 当数据改变后会被调用
    * @param {object} options 
    * @param {boolean} isRenderWatcher 用于渲染函数的 Watcher?
    */
@@ -131,12 +131,8 @@ export default class Watcher {
 
     try {
       // 对 getter 进行切换上下文的调用并传入 vm 本身作为第一个参数
-      // 这一行代码非常关键因为这里会触发依赖收集, 这里涉及到两种情况
-      /**
-       * 1. watch compute 等用户指定的 Watcher
-       * 2. render 函数
-       */
-      // 就那定义一个 watch 来说, 监听 'a.b.c'
+      // 这一行代码非常关键因为这里会触发依赖收集
+      // 对于 watch API 来说, 监听 'a.b.c'
       // getter 存放的闭包会进行迭代获取对象属性直到获取到属性 c
       // 先获取 a 在获取 b 在获取 c 就会让 a b c 这个三个属性都进行依赖收集, 收集这个 Watcher
       // 不要忘记了这会触发响应式属性上的 getter 然后进行依赖收集
@@ -163,6 +159,7 @@ export default class Watcher {
       // 将 Wacher 从 Dep.target 上移除
       // 这样一来这个 Watcher 就不会被继续收集
       popTarget()
+      // 
       this.cleanupDeps()
     }
     
@@ -176,12 +173,28 @@ export default class Watcher {
    */
   addDep (dep: Dep) {
     const id = dep.id
-    // 防止重复添加
+    // 防止重复添加 dep 
+    // 实际上是避免了重复收集同一个依赖
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
-      // TODO: 到这里为止
+      // addDep 方法实际上是被 dep 所调用的
+      // Watcher 建立将自己挂载到 Dep.target 上
+      // 然后 Watcher 会读取要监听属性
+      // 或者执行 render 在这个过程中会触碰到响应式属性
+      // 从而让触碰到的这些属性对应的 Dep 却收集这个 Watcher
+      // 而 Dep 会将 Dep 放入 Watcher 中, 这个步骤称为依赖收集
+      // Watcher 会将 Watcher 放入 Dep 中, 这个步骤称为订阅
+      // 当 Dep 所对应的属性被修改后让 Dep 去迭代执行 Dep
+      // 关联的所有 Watcher
+      // 当数据改变后 -> 通知 Watcher -> Dep.target = Watcher -> 调用 render -> 渲染函数读取响应式属性 -> 触发 getter 
+      // Dep 去收集依赖 -> 执行这个方法 -> 在这里发现这里已经存储对应 ID 的 Dep 了
+      // 跳过多余的订阅
       if (!this.depIds.has(id)) {
+        // 向 dep 中添加订阅
+        // 不要忘记了订阅是如何触发的
+        // 当响应式修改的时候通过 setter
+        // 会执行 dep 的 notify 后会调用存储在 dep 中的 Watcher
         dep.addSub(this)
       }
     }
@@ -192,16 +205,28 @@ export default class Watcher {
    */
   cleanupDeps () {
     let i = this.deps.length
+    // 将在 get 方法执行后新收集到的 Dep
+    // 于在 get 方法调用之前收集到的 Dep 进行比较
+    // 将在 deps 中存在但是不存在于 newDeps 中的 Dep 进行与当前 Watcher 的解绑
+    // newDeps 中存在的 Dep 是比 deps 中的多还是少呢?
+    // 答案是, 可能多也可能少, 我们的目的是 收集新的依赖以及移除不需要的依赖
     while (i--) {
       const dep = this.deps[i]
       if (!this.newDepIds.has(dep.id)) {
         dep.removeSub(this)
       }
     }
+
+    // 新的 newDepIds 变为 depIds
+    // 原有的 depIds 是一个 set
+    // 清空后指向 newDepIds
+    // 真是一点性能都不浪费, 不知道函数开销与新开辟一片内存区域那个大
     let tmp = this.depIds
     this.depIds = this.newDepIds
     this.newDepIds = tmp
     this.newDepIds.clear()
+
+    // 同理
     tmp = this.deps
     this.deps = this.newDeps
     this.newDeps = tmp

@@ -4499,15 +4499,13 @@
    */
   Watcher.prototype.addDep = function addDep (dep) {
     var id = dep.id;
+    debugger;
     if (!this.newDepIds.has(id)) {
-      console.log('watcher ' + this.id + ' to add a dep which id is ' + dep.id)
       this.newDepIds.add(id);
       this.newDeps.push(dep);
       if (!this.depIds.has(id)) {
         dep.addSub(this);
       }
-    }else{
-      console.log('watcher ' + this.id + ' is already have dep which id is ' + dep.id)
     }
   };
 
@@ -4835,9 +4833,9 @@
         if (watcher.dirty) {
           watcher.evaluate();
         }
-        // if (Dep.target) {
-        //   watcher.depend();
-        // }
+        if (Dep.target) {
+          watcher.depend();
+        }
         return watcher.value
       }
     }

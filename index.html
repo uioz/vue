@@ -11,38 +11,22 @@
 
 <body>
   <div id="root">
-    <!-- <test @click="handleClick" @click="handleClick"></test> -->
-    <!-- <button @click.once="handleButtonClick"></button> -->
+    {{ message }}
   </div>
   <script>
-    // Vue.component('test', {
-    //   name: 'test',
-    //   template:
-    //     `<div></div>`
-    // })
-
     new Vue({
       el: '#root',
-      // props: ['hello'],
-      // beforeCreate() {
-      //   console.log('hello world')
-      // },
-      // computed:{
-      //   game(){
-      //     return this.message;
-      //   }
-      // },
-      // inject:['hello'],
       data: {
-        message: {
-          game: 123
-        }
+        message:123
       },
-      render(createElement){
-        return createElement('span',JSON.stringify(this.message));
-      },
-      created(){
-        this.$set(this.message,'hello',456)
+      mounted(){
+
+        debugger;
+        this.$watch('message',function () {
+          // 空的内容  
+        });
+
+        this.message = 456;
       }
       // created() {
       //   setTimeout(() => {
