@@ -19,12 +19,12 @@
       data: {
         message:123
       },
-      mounted(){
+      watch:{
+        message(){
 
-        debugger;
-        this.$watch('message',function () {
-          // 空的内容  
-        });
+        }
+      },
+      mounted(){
 
         this.message = 456;
       }

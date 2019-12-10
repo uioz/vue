@@ -346,7 +346,7 @@ export function defineReactive(
       }
       // 观察新加入的属性
       childOb = !shallow && observe(newVal)
-      // 通知依赖收集
+      // 通知关联了该 Dep 的 Watcher 做出响应
       dep.notify()
     }
   })

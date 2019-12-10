@@ -4499,7 +4499,6 @@
    */
   Watcher.prototype.addDep = function addDep (dep) {
     var id = dep.id;
-    debugger;
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id);
       this.newDeps.push(dep);
@@ -4535,6 +4534,7 @@
    * Will be called when a dependency changes.
    */
   Watcher.prototype.update = function update () {
+    debugger;
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true;

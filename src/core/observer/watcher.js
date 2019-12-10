@@ -217,33 +217,42 @@ export default class Watcher {
       }
     }
 
-    // 新的 newDepIds 变为 depIds
+    // newDepIds 赋值给 depIds
     // 原有的 depIds 是一个 set
     // 清空后指向 newDepIds
+    // 这里完成一个新老 dep 的交换
     // 真是一点性能都不浪费, 不知道函数开销与新开辟一片内存区域那个大
     let tmp = this.depIds
     this.depIds = this.newDepIds
     this.newDepIds = tmp
+    // 清空 newDepIds
     this.newDepIds.clear()
 
-    // 同理
+    // 三方交换
     tmp = this.deps
     this.deps = this.newDeps
     this.newDeps = tmp
+    // 清空数组
     this.newDeps.length = 0
   }
 
   /**
    * Subscriber interface.
    * Will be called when a dependency changes.
+   * 这个方法会在依赖被修改后调用
    */
   update () {
     /* istanbul ignore else */
-    if (this.lazy) {
+    if (this.lazy) { // 惰性求值
       this.dirty = true
     } else if (this.sync) {
+      // 是否同步执行(普通的 Watcher 都是同步执行的)
+      // render 函数是异步执行的
       this.run()
     } else {
+      // 将 Watcher 放入响应式任务队列
+      // 这个队列全局唯一
+      // 主要目的是将 Watcher 排队后 统一执行
       queueWatcher(this)
     }
   }
@@ -251,9 +260,12 @@ export default class Watcher {
   /**
    * Scheduler job interface.
    * Will be called by the scheduler.
+   * 该方法调用后会调用 Watcher, 他被任务调度器使用.
    */
   run () {
+    // 如果 Watcher 是激活的状态
     if (this.active) {
+      // 
       const value = this.get()
       if (
         value !== this.value ||
