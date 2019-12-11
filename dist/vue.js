@@ -4534,7 +4534,6 @@
    * Will be called when a dependency changes.
    */
   Watcher.prototype.update = function update () {
-    debugger;
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true;
@@ -4551,6 +4550,7 @@
    */
   Watcher.prototype.run = function run () {
     if (this.active) {
+      debugger;
       var value = this.get();
       if (
         value !== this.value ||

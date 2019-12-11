@@ -159,7 +159,8 @@ export default class Watcher {
       // 将 Wacher 从 Dep.target 上移除
       // 这样一来这个 Watcher 就不会被继续收集
       popTarget()
-      // 
+
+      // 做依赖收集后的清理工作
       this.cleanupDeps()
     }
     
@@ -261,12 +262,21 @@ export default class Watcher {
    * Scheduler job interface.
    * Will be called by the scheduler.
    * 该方法调用后会调用 Watcher, 他被任务调度器使用.
+   * ps: 被 WatcherQueue 和 Dep 调用
    */
   run () {
     // 如果 Watcher 是激活的状态
     if (this.active) {
-      // 
+      // Watcher 执行的时候通过 this.get() 执行
+      // 但是不要忘记了 get 方法会允许 Dep 获取到挂载到 Target.Dep 上的属性
+      // 也就是说收集在 Wacher 执行期间的依赖
       const value = this.get()
+
+      // 条件1: 如果 value 发生了变化 ||
+      // 条件2: value 是对象(非纯对象) ||
+      // 条件3: 使用了 deep
+      // render 函数不返回内容也就是返回 undefined
+      // 所以不会走这个分支
       if (
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
@@ -275,16 +285,20 @@ export default class Watcher {
         isObject(value) ||
         this.deep
       ) {
-        // set new value
+        // 新 value 和旧 value 交换
         const oldValue = this.value
         this.value = value
+        // 用户定义的 Watch 走这个分支
         if (this.user) {
           try {
+            // cb 就是在 Watch api 上由用户定义的回调
+            // 用户定义的回掉含有错误提示
             this.cb.call(this.vm, value, oldValue)
           } catch (e) {
             handleError(e, this.vm, `callback for watcher "${this.expression}"`)
           }
         } else {
+          // 非用户定义的回调没有错误拦截
           this.cb.call(this.vm, value, oldValue)
         }
       }
