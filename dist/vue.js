@@ -1037,7 +1037,6 @@
       enumerable: true,
       configurable: true,
       get: function reactiveGetter () {
-        debugger;
         var value = getter ? getter.call(obj) : val;
         if (Dep.target) {
           dep.depend();
@@ -1051,7 +1050,6 @@
         return value
       },
       set: function reactiveSetter (newVal) {
-        debugger;
         var value = getter ? getter.call(obj) : val;
         /* eslint-disable no-self-compare */
         if (newVal === value || (newVal !== newVal && value !== value)) {
@@ -4534,6 +4532,7 @@
    * Will be called when a dependency changes.
    */
   Watcher.prototype.update = function update () {
+    debugger;
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true;
@@ -4549,8 +4548,8 @@
    * Will be called by the scheduler.
    */
   Watcher.prototype.run = function run () {
+    debugger;
     if (this.active) {
-      debugger;
       var value = this.get();
       if (
         value !== this.value ||

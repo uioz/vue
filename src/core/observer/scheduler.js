@@ -173,20 +173,26 @@ export function queueWatcher (watcher: Watcher) {
 
     has[id] = true
 
-    // 队列没有被执行过
+    // 队列任务不在执行中
     if (!flushing) {
       queue.push(watcher)
     } else {
-      // TODO:
-      // if already flushing, splice the watcher based on its id
-      // if already past its id, it will be run next immediately.
+      /**
+       * 由于 Watcher 的执行是异步的，Watcher 的执行的过程中
+       * 存在新 Watcher 添加到队列中的情况，也就是这个分支
+       * 执行的目的，新添加的任务，会在已有的队列执行完成后
+       * 在继续执行.
+       * 执行 WacherA 触发 WacherB 向队列添加，有两种情况
+       * B 已经执行过了或者 B 还未执行, 第一种情况下将该 Watcher 添加到队列末尾
+       * 第二种情况基于旧的 B 在队列中的位置替换为新的 Watcher
+       */
       let i = queue.length - 1
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
       queue.splice(i + 1, 0, watcher)
     }
-    // queue the flush
+    // 执行队列
     if (!waiting) {
       waiting = true
 

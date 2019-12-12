@@ -84,7 +84,20 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
+/**
+ * nextTick 我就不细分析了, 因为涉及的东西比较多, 
+ * 在注释中不便于编写，而且有关 nextTick 的文章太多了.
+ * 没有继续编写的必要, 这里你只需要将 nextTick 理解为允许添加执行上下文的 Vue.$nextTick 就可以了
+ * 
+ * 另外需要注意的是 nextTick 主要有两个调用者
+ * 第一个就是 Watcher 的更新是异步的利用了 nextTick(但是 Watcher 在前一个异步 Watcher 任务未执行去前不会继续添加任务)
+ * 另外就是用户调用 Vue.$nextTick.
+ * 所以 callbacks 中不会存在两个由 Watcher 提供的异步任务.
+ * 
+ * 2.1.0 起新增：如果没有提供回调且在支持 Promise 的环境中，则返回一个 Promise。请注意 Vue 不自带 Promise 的 polyfill，所以如果你的目标浏览器不是原生支持 Promise (IE：你们都看我干嘛)，你得自行 polyfill。
+ */
 export function nextTick (cb?: Function, ctx?: Object) {
+  // _resolve 配合顶部注释最后一行食用
   let _resolve
   callbacks.push(() => {
     if (cb) {
@@ -97,10 +110,19 @@ export function nextTick (cb?: Function, ctx?: Object) {
       _resolve(ctx)
     }
   })
+
+  // 没有任务在执行, 那就开始执行吧
   if (!pending) {
+    // 防止执行两次
     pending = true
+    // 这个函数执行后也就意味着
+    // 它启动了异步任务
+    // 不要忘记了: 当调用栈清空后异步任务才会执行
+    // 所以在这个函数调用后, 代码依然是同步继续执行的
     timerFunc()
   }
+
+  // 配合顶部注释最后一行食用
   // $flow-disable-line
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {

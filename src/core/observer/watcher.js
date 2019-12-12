@@ -247,13 +247,14 @@ export default class Watcher {
     if (this.lazy) { // 惰性求值
       this.dirty = true
     } else if (this.sync) {
-      // 是否同步执行(普通的 Watcher 都是同步执行的)
-      // render 函数是异步执行的
+      // 当数据变化后是否同步响应对应的 Watcher
+      // 一般来讲所有的 Wacher 都是异步的
       this.run()
     } else {
       // 将 Watcher 放入响应式任务队列
       // 这个队列全局唯一
-      // 主要目的是将 Watcher 排队后 统一执行
+      // 主要目的是将 Watcher 进行排队后优化
+      // 去除重复的 Watcher 
       queueWatcher(this)
     }
   }
