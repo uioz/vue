@@ -70,6 +70,7 @@ if (inBrowser && !isIE) {
  */
 function flushSchedulerQueue () {
   currentFlushTimestamp = getNow()
+  // 标记开始执行 Watcher 队列了
   flushing = true
   let watcher, id
 
@@ -81,19 +82,37 @@ function flushSchedulerQueue () {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  /**
+   * 在执行前排序队列可以保证:
+   * 1. 组件的更新是从父组件到子组件的. - 因为父组件总是先于子组件创建
+   * 2. 在组件上由用户定义的 Watcher 要先于渲染函数. - 因为 Watcher 先于 render 创建
+   * 3. 如果一个组件在他的父组件 Watcher 执行期间被销毁(Watcher 执行代码是存在副作用的). - 则这个组件的 Watcher 执行会被跳过
+   */
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  // 不缓存 length 因为在我们执行已存在的 Watcher 的期间更多的 watcher 可能会被 push 到队列中
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
+
+    // 执行创建 watcher 时候提供的 before
+    // 典型的当 render 执行前会触发 beforeUpdate 钩子
+    // 如果是 render 函数那么 这里的 before 就是 beforeUpdate 钩子
     if (watcher.before) {
       watcher.before()
     }
+
     id = watcher.id
     has[id] = null
+    // 最关键的代码, 对于用户定义的 Watcher 来说这里
+    // 就是用户定义的回调的执行位置
     watcher.run()
+
     // in dev build, check and stop circular updates.
+    // 在开发模式下检测是否存在无限循环的 Watcher 更新
+    // 即在一个 Watcher 中修改了会触发这个 Watcher 本身的属性
+    // 而且没有中断条件, 那么这个 Watcher 将会无限执行下去
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
       circular[id] = (circular[id] || 0) + 1
       if (circular[id] > MAX_UPDATE_COUNT) {
@@ -111,6 +130,7 @@ function flushSchedulerQueue () {
   }
 
   // keep copies of post queues before resetting state
+  // 在重置状态前保留它们的拷贝用于发布队列
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
@@ -167,39 +187,60 @@ function callActivatedHooks (queue) {
 export function queueWatcher (watcher: Watcher) {
 
   const id = watcher.id
-  // 如果这个 id 已经存在那么我们就跳过它保证队列中
-  // wacher 的唯一性
+
+  // 如果一个 Watcher 已经执行过了 has[id] === null
+  // 如果一个 Watcher 还为存在于队列中 has[id] === undefined
+  // 这个分支支持上述的两种判断, 所以进入这个分支的 Watcher 不存在重复
   if (has[id] == null) {
 
     has[id] = true
 
-    // 队列任务不在执行中
+    // Watcher 的添加都是密集的, 什么意思
+    // 考虑一下什么时候会导致 Watcher 执行
+    // 一定是依赖被修改的时候, 一个响应式属性
+    // 的变化会导致相关联许多 Watcher 都需要执行
+    // Vue 修改响应式属性一般集中在 methods 中或者 render(template) 中
+    // 一般来讲修改的属性数量都不多, 但是代码是同步执行的
+    // 这些属性关联的 Watcher 都会被添加到队列中
+    // 也就是这里, 如果目前不在 异步刷新队列 任务中
+    // 这些不重复的 Watcher 会被添加到队列中等待异步刷新执行
     if (!flushing) {
       queue.push(watcher)
     } else {
-      /**
-       * 由于 Watcher 的执行是异步的，Watcher 的执行的过程中
-       * 存在新 Watcher 添加到队列中的情况，也就是这个分支
-       * 执行的目的，新添加的任务，会在已有的队列执行完成后
-       * 在继续执行.
-       * 执行 WacherA 触发 WacherB 向队列添加，有两种情况
-       * B 已经执行过了或者 B 还未执行, 第一种情况下将该 Watcher 添加到队列末尾
-       * 第二种情况基于旧的 B 在队列中的位置替换为新的 Watcher
-       */
+      // 如果在 异步刷新队列 任务中走到了这个分支
+      // 说明这个 Watcher 的更新原因是
+      // 执行 Watcher 的过程中产生了副作用修改了响应式属性, 导致新的 Watcher 被触发
+      // 这些新的 Watcher 也要被添加到 Watcher 队列中等待执行
+      // 既然当前就在刷新 Watcher 队列的过程中我们完全没有必要
+      // 让这些 Watcher 在下一次 nextTick 中执行
+      // 所以 Vue 在此处做了优化, 让这个 Watcher 插入到队列中
+      // Watcher 在创建的时候根据创建的时间不同会产生一个自增的 id
+      // 先创建的 Watcher 的 id 都比较小, 而后创建的都比较大
+      // 也就是说父组件要比子组件的值要小
+      // 数组是从小到大排序的
+      // 这里为新的 Watcher 找到自己的位置然后把它插入
       let i = queue.length - 1
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
       queue.splice(i + 1, 0, watcher)
     }
-    // 执行队列
+
+    // 是不是在等待浏览器异步更新 Watcher 队列
+    // 不是, 那么赶紧要求浏览器更新异步任务队列
+    // 因为我们有任务了!
     if (!waiting) {
+      // 正在等待浏览器异步更新 Watcher 
       waiting = true
 
       if (process.env.NODE_ENV !== 'production' && !config.async) {
         flushSchedulerQueue()
         return
       }
+
+      // 异步执行 flushSchedulerQueue 函数
+      // 所以接下来的代码还都是同步执行的
+      // 直到同步调用栈清空那么 flushSchedulerQueue 会被调用
       nextTick(flushSchedulerQueue)
     }
   }

@@ -10,11 +10,17 @@ export let isUsingMicroTask = false
 const callbacks = []
 let pending = false
 
+/**
+ * flushCallbacks 就是用于执行 callbacks 队列中存在回调的函数
+ * 这个函数被 timerFunc 变量调用, timerFunc 是当前环境下执行异步任务的最优解
+ */
 function flushCallbacks () {
+  // 标记等待为 false
   pending = false
   const copies = callbacks.slice(0)
   callbacks.length = 0
   for (let i = 0; i < copies.length; i++) {
+    // 调用存储在 callbacks 中的函数
     copies[i]()
   }
 }
@@ -97,7 +103,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
  * 2.1.0 起新增：如果没有提供回调且在支持 Promise 的环境中，则返回一个 Promise。请注意 Vue 不自带 Promise 的 polyfill，所以如果你的目标浏览器不是原生支持 Promise (IE：你们都看我干嘛)，你得自行 polyfill。
  */
 export function nextTick (cb?: Function, ctx?: Object) {
-  // _resolve 配合顶部注释最后一行食用
+  // _resolve 配合函数注释部分最后一行食用
   let _resolve
   callbacks.push(() => {
     if (cb) {
@@ -113,16 +119,17 @@ export function nextTick (cb?: Function, ctx?: Object) {
 
   // 没有任务在执行, 那就开始执行吧
   if (!pending) {
-    // 防止执行两次
+    // 标记在执行任务前的等待中(任务是异步执行的)
     pending = true
     // 这个函数执行后也就意味着
     // 它启动了异步任务
     // 不要忘记了: 当调用栈清空后异步任务才会执行
     // 所以在这个函数调用后, 代码依然是同步继续执行的
+    // 直到同步的调用栈清空
     timerFunc()
   }
 
-  // 配合顶部注释最后一行食用
+  // 配合函数注释部分最后一行食用
   // $flow-disable-line
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {
