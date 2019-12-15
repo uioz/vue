@@ -24,6 +24,9 @@ let index = 0
 
 /**
  * Reset the scheduler's state.
+ * 重置 scheduler 的状态到初始状态
+ * 1. 清空队列
+ * 2. 重置变量
  */
 function resetSchedulerState () {
   index = queue.length = activatedChildren.length = 0
@@ -134,9 +137,11 @@ function flushSchedulerQueue () {
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
+  // 重置Watcher queue状态
   resetSchedulerState()
 
   // call component updated and activated hooks
+  // 调用组件的 updated 钩子和 activated(keep-alive) 钩子
   callActivatedHooks(activatedQueue)
   callUpdatedHooks(updatedQueue)
 

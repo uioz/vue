@@ -22,6 +22,10 @@ let uid = 0
  * A watcher parses an expression, collects dependencies,
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
+ * 
+ * Watcher 解析一个给定的表达式, 收集依赖, 当给定的表达式发生变化
+ * 执行给定的回调函数.
+ * 他在 $watch api 以及指令中使用
  */
 export default class Watcher {
   vm: Component;
@@ -276,8 +280,14 @@ export default class Watcher {
       // 条件1: 如果 value 发生了变化 ||
       // 条件2: value 是对象(非纯对象) ||
       // 条件3: 使用了 deep
-      // render 函数不返回内容也就是返回 undefined
+      // render 函数不返回内容永远返回 undefined
       // 所以不会走这个分支
+      // $watch(expression,callback) Api 允许第一个参数是一个函数, 函数会产生一个返回值
+      // 这个值就是 this.getter 执行后返回的内容
+      // 所以这里要求新值与旧值不同, 这样才会触发 Watcher 的 callback
+      // 如果返回的是一个对象那么直接使用相等性判断是没有用的
+      // 因为对象内部的属性可能发生了变化
+      // 所以第二个条件允许对象通过
       if (
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
@@ -327,19 +337,30 @@ export default class Watcher {
 
   /**
    * Remove self from all dependencies' subscriber list.
+   * 将自身从所有的 Dep 对象中的订阅列表中移除
    */
   teardown () {
     if (this.active) {
       // remove self from vm's watcher list
       // this is a somewhat expensive operation so we skip it
       // if the vm is being destroyed.
+
+      // 把自己(Watcher)从 vm's 的 watcher 中移除
+      // 这个是一个昂贵的操作, 如果实例即将销毁
+      // 这步就跳过不做了
+      // 本质上是从数组中移除一个元素, 但是移除元素需要内部整体元素偏移
       if (!this.vm._isBeingDestroyed) {
         remove(this.vm._watchers, this)
       }
+
+      // 解除订阅
       let i = this.deps.length
       while (i--) {
+        // 同数数组中移除元素
         this.deps[i].removeSub(this)
       }
+
+      // 标记 Watcher 不在使用
       this.active = false
     }
   }

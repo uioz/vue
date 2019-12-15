@@ -32,8 +32,7 @@ export default class Dep {
   }
 
   /**
-   * 移除订阅
-   * @param {*} sub 
+   * 移除订阅的 Watcher
    */
   removeSub (sub: Watcher) {
     remove(this.subs, sub)

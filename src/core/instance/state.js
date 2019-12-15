@@ -405,21 +405,44 @@ export function stateMixin (Vue: Class<Component>) {
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 
+  // set 函数以及 del 函数
+  // 用于向响应式对象添加以及删除内容
+  // 确保修改可以触发响应式更新
   Vue.prototype.$set = set
   Vue.prototype.$delete = del
 
+  /**
+   * $watch 方法 相信大家都不陌生
+   * $watch 方法接收多种类型的参数组合.  
+   * 但是总的来说这个方法会将给定的参数进行处理
+   * 然后交由 Watcher 类作为构造函数的参数使用
+   */
   Vue.prototype.$watch = function (
     expOrFn: string | Function,
     cb: any,
     options?: Object
   ): Function {
+
     const vm: Component = this
+
+    /**
+     * $watch()
+     */
     if (isPlainObject(cb)) {
       return createWatcher(vm, expOrFn, cb, options)
     }
+    
     options = options || {}
+    // 标记为用户定义的 Watcher
+    // 用户定义的 Watcher 会有错误提示
     options.user = true
+
+    // 利用给定的参数创建一个 Watcher
     const watcher = new Watcher(vm, expOrFn, cb, options)
+
+    // 如果提供了 immediate
+    // 说明要求在建立监听的同时
+    // 就要触发一次回调
     if (options.immediate) {
       try {
         cb.call(vm, watcher.value)
@@ -427,6 +450,10 @@ export function stateMixin (Vue: Class<Component>) {
         handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)
       }
     }
+
+    // $watch 返回一个钩子
+    // 调用后销毁 Watcher
+    // 这里返回一个函数闭包中调用了 Watcher 的 teardown 方法
     return function unwatchFn () {
       watcher.teardown()
     }
