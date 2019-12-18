@@ -1,6 +1,11 @@
 /* @flow */
 /* globals MutationObserver */
 
+/**
+ * 这个文件最重要的导出就是 nextTick 函数
+ * 该函数会利用微任务异步的调用给定的回调
+ */
+
 import { noop } from 'shared/util'
 import { handleError } from './error'
 import { isIE, isIOS, isNative } from './env'

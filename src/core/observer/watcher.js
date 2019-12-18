@@ -90,7 +90,8 @@ export default class Watcher {
     this.newDeps = []
     this.depIds = new Set()
     this.newDepIds = new Set()
-    // 获取表达式
+    // 在开发模式下将 expression 转为字符串
+    // 在捕获到错误的时候提供用户错误
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
       : ''

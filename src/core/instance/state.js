@@ -341,10 +341,15 @@ function initMethods (vm: Component, methods: Object) {
   }
 }
 
+/**
+ * 此处的 watch 就是初始化实例时候使用的 watch 属性
+ */
 function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
-    // TODO 待证实 经过 mergeOptions 后可能是个数组
+    // TODO 待证实
+    // 如果组件使用了 extend 或者 mixin
+    // 该组件经过 mergeOptions 后同名的 watch 可能是个数组
     if (Array.isArray(handler)) {
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
@@ -355,30 +360,42 @@ function initWatch (vm: Component, watch: Object) {
   }
 }
 
+/**
+ * 负责处理 initWatcher 以及 用户添加的 Watcher, 即下方例子中的对象:
+ * @example
+ * Vue.$watch('a.b',{
+ *   immediate:true,
+ *   handler(){},
+ *   deep:true
+ * })
+ */
 function createWatcher (
   vm: Component,
   expOrFn: string | Function,
   handler: any,
   options?: Object
 ) {
-  /**
-   * handler 作为纯对象可能是如下结构
-   * @example
-   * {
-   *   deep:boolean,
-   *   handler:function,
-   *   immediate:boolean
-   * }
-   */
   if (isPlainObject(handler)) {
     options = handler
     handler = handler.handler
   }
-  // TODO 待证实 未见该分支有作用 $watch 以及 createWatcher 均为见这种分支
+  /**
+   * 目的是从 methods 上取出一个同名方法
+   * 来当作 handler
+   * @example
+   * new Vue({
+   *   watch:{
+   *     name:'hello'
+   *   },
+   *   methods:{
+   *     hello(){}
+   *   }
+   * })
+   */
   if (typeof handler === 'string') {
     handler = vm[handler]
   }
-  // expOrFn === 要监听的属性名称, handler === 回掉, options === 监听选项
+  // 取出关键的参数利用 vm.$watch 来创建监听
   return vm.$watch(expOrFn, handler, options)
 }
 

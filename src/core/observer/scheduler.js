@@ -1,5 +1,11 @@
 /* @flow */
 
+/**
+ * 本文文件提供了一个队列, 用于优化数据改变触发的大量 Watcher
+ * 在这个优化中将 Watcher 进行排队并且剔除了重复的 Watcher
+ * 并且将 Watcher 的执行利用 nextTick 转为异步更新. 
+ */
+
 import type Watcher from './watcher'
 import config from '../config'
 import { callHook, activateChildComponent } from '../instance/lifecycle'
