@@ -12,17 +12,18 @@
 <body>
   <div id="root">
     {{ message }}
+    {{ hello }}
   </div>
   <script>
     new Vue({
       el: '#root',
+      computed:{
+        hello(){
+          return this.message + 123;
+        }
+      },
       data: {
         message:123
-      },
-      watch:{
-        message(){
-
-        }
       },
       mounted(){
 

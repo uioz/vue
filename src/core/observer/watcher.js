@@ -123,6 +123,7 @@ export default class Watcher {
 
   /**
    * Evaluate the getter, and re-collect dependencies.
+   * 对 getter 求值和再次依赖收集
    */
   get () {
 
@@ -320,6 +321,8 @@ export default class Watcher {
   /**
    * Evaluate the value of the watcher.
    * This only gets called for lazy watchers.
+   * 对这个 Watcher 进行求值.
+   * 这只会发生在惰性 Watcher 上.
    */
   evaluate () {
     this.value = this.get()
@@ -328,6 +331,7 @@ export default class Watcher {
 
   /**
    * Depend on all deps collected by this watcher.
+   * 所有的 deps 将这个 Watcher 进行依赖收集
    */
   depend () {
     let i = this.deps.length

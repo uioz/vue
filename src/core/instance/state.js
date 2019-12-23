@@ -35,11 +35,11 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
-export function proxy (target: Object, sourceKey: string, key: string) {
-  sharedPropertyDefinition.get = function proxyGetter () {
+export function proxy(target: Object, sourceKey: string, key: string) {
+  sharedPropertyDefinition.get = function proxyGetter() {
     return this[sourceKey][key]
   }
-  sharedPropertyDefinition.set = function proxySetter (val) {
+  sharedPropertyDefinition.set = function proxySetter(val) {
     this[sourceKey][key] = val
   }
   Object.defineProperty(target, key, sharedPropertyDefinition)
@@ -49,7 +49,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
  * 负责 Vue 实例上有关 状态数据(data)的初始化
  * @param {Object} vm 
  */
-export function initState (vm: Component) {
+export function initState(vm: Component) {
   vm._watchers = []
   const opts = vm.$options
   // 如果存在 props 则初始化 props
@@ -74,7 +74,7 @@ export function initState (vm: Component) {
  * @param {Object} vm 
  * @param {Object} propsOptions 
  */
-function initProps (vm: Component, propsOptions: Object) {
+function initProps(vm: Component, propsOptions: Object) {
   // 获取用于测试的 propsData
   const propsData = vm.$options.propsData || {}
   // 获取 props, 注意数组类型的 props 在通过 mergeOptions 后变为对象类型
@@ -93,7 +93,7 @@ function initProps (vm: Component, propsOptions: Object) {
     if (process.env.NODE_ENV !== 'production') {
       const hyphenatedKey = hyphenate(key)
       if (isReservedAttribute(hyphenatedKey) ||
-          config.isReservedAttr(hyphenatedKey)) {
+        config.isReservedAttr(hyphenatedKey)) {
         warn(
           `"${hyphenatedKey}" is a reserved attribute and cannot be used as component prop.`,
           vm
@@ -140,7 +140,7 @@ function initProps (vm: Component, propsOptions: Object) {
  *   }
  * })
  */
-function initData (vm: Component) {
+function initData(vm: Component) {
   let data = vm.$options.data
   // 获取 data 中的值,如果传入了data 则此时的data 经过了 mergeOptions 变成了函数
   // 为了防止在 beforeCreate 中修改了 vm.$options.data 所以这里继续判断函数然后获取结果
@@ -189,7 +189,7 @@ function initData (vm: Component) {
   observe(data, true /* asRootData */)
 }
 
-export function getData (data: Function, vm: Component): any {
+export function getData(data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
   // 在初始化期间停止依赖收集, 避免触发多次更新
   pushTarget()
@@ -208,13 +208,14 @@ const computedWatcherOptions = { lazy: true }
 /**
  * 
  */
-function initComputed (vm: Component, computed: Object) {
+function initComputed(vm: Component, computed: Object) {
   // $flow-disable-line
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   // 在 SSR 期间 computed 是立即计算 getters
   const isSSR = isServerRendering()
 
+  // 迭代 computed
   for (const key in computed) {
     const userDef = computed[key]
     /**
@@ -226,7 +227,8 @@ function initComputed (vm: Component, computed: Object) {
      * }
      */
     const getter = typeof userDef === 'function' ? userDef : userDef.get
-    // 错误提示
+
+    // 如果没有提供可以执行的函数则提示错误
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(
         `Getter is missing for computed property "${key}".`,
@@ -234,8 +236,8 @@ function initComputed (vm: Component, computed: Object) {
       )
     }
 
-    // 在 SSR 的情况下, 将 computed 上的每一个属性
-    // 通过 Watcher 添加到 vm._computedWatchers 上
+    // 在 SSR 的情况下, 将 computed 上的每一个初始化完成的属性
+    // 添加到 vm._computedWatchers 上
     if (!isSSR) {
       // create internal watcher for the computed property.
       watchers[key] = new Watcher(
@@ -249,6 +251,8 @@ function initComputed (vm: Component, computed: Object) {
     // component-defined computed properties are already defined on the
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
+    // 计算属性在 vm 实例上是唯一的
+    // 如果存在重名则不会进行初始化
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
     } else if (process.env.NODE_ENV !== 'production') {
@@ -261,18 +265,22 @@ function initComputed (vm: Component, computed: Object) {
   }
 }
 
-export function defineComputed (
+export function defineComputed(
   target: any,
   key: string,
   userDef: Object | Function
 ) {
   const shouldCache = !isServerRendering()
+
+  // 计算属性是函数分支
   if (typeof userDef === 'function') {
+    // 在服务端渲染下 shouldCache 为 false 反之为 true
     sharedPropertyDefinition.get = shouldCache
-      ? createComputedGetter(key)
-      : createGetterInvoker(userDef)
+      ? createComputedGetter(key) // 返回的是具有缓存的闭包函数
+      : createGetterInvoker(userDef) // 返回的是无缓存执行的闭包函数
     sharedPropertyDefinition.set = noop
   } else {
+    // 计算属性是 get 函数分支
     sharedPropertyDefinition.get = userDef.get
       ? shouldCache && userDef.cache !== false
         ? createComputedGetter(key)
@@ -280,8 +288,11 @@ export function defineComputed (
       : noop
     sharedPropertyDefinition.set = userDef.set || noop
   }
+
+  // 如果计算属性提供 get 函数但是不没有提供 set 函数
+  // 当给计算属性赋值的时候提示 set 不存在
   if (process.env.NODE_ENV !== 'production' &&
-      sharedPropertyDefinition.set === noop) {
+    sharedPropertyDefinition.set === noop) {
     sharedPropertyDefinition.set = function () {
       warn(
         `Computed property "${key}" was assigned to but it has no setter.`,
@@ -289,16 +300,37 @@ export function defineComputed (
       )
     }
   }
+
+  // 计算属性以
+  // getter/setter 的方式被定义到 vm 实例身上
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
-function createComputedGetter (key) {
-  return function computedGetter () {
+function createComputedGetter(key) {
+  // computedGetter 实际上被置换为计算属性真正的 getter
+  // 在这个函数中你可以看到缓存的处理
+
+  /**
+   * 请试想一下你在 render 函数中使用了计算属性
+   * 计算属性在 render 中被读取对应的 getter 被执行
+   * 也就是这个函数, 每一个计算属性都有对应的一个针对计算属性创建的 Watcher
+   * 这个 Watcher.evaluate 被调用进行了求值, 实际上执行的是这个 Watcher.get 方法
+   * 而 Watcher.get 中存储的是计算属性上定义的函数, 函数执行, 会有如下的情况:
+   * 1. 这个函数引用了其他的计算属性或者响应式属性
+   *   其他的响应式属性会订阅这个 Watcher 后返回对应的属性值
+   *   当被依赖的响应式属性变化的时候会触发这个 Watcher
+   *   
+   * 2. 没有引用任何响应式属性
+   *   直接返回
+   */
+  return function computedGetter() {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
+      // 调用 Watcher 进行求值
       if (watcher.dirty) {
         watcher.evaluate()
       }
+      // TODO 依赖收集
       if (Dep.target) {
         watcher.depend()
       }
@@ -308,12 +340,12 @@ function createComputedGetter (key) {
 }
 
 function createGetterInvoker(fn) {
-  return function computedGetter () {
+  return function computedGetter() {
     return fn.call(this, this)
   }
 }
 
-function initMethods (vm: Component, methods: Object) {
+function initMethods(vm: Component, methods: Object) {
   const props = vm.$options.props
   for (const key in methods) {
     if (process.env.NODE_ENV !== 'production') {
@@ -344,7 +376,7 @@ function initMethods (vm: Component, methods: Object) {
 /**
  * 此处的 watch 就是初始化实例时候使用的 watch 属性
  */
-function initWatch (vm: Component, watch: Object) {
+function initWatch(vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
     // TODO 待证实
@@ -369,7 +401,7 @@ function initWatch (vm: Component, watch: Object) {
  *   deep:true
  * })
  */
-function createWatcher (
+function createWatcher(
   vm: Component,
   expOrFn: string | Function,
   handler: any,
@@ -399,7 +431,7 @@ function createWatcher (
   return vm.$watch(expOrFn, handler, options)
 }
 
-export function stateMixin (Vue: Class<Component>) {
+export function stateMixin(Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
   // the object here.
@@ -448,7 +480,7 @@ export function stateMixin (Vue: Class<Component>) {
     if (isPlainObject(cb)) {
       return createWatcher(vm, expOrFn, cb, options)
     }
-    
+
     options = options || {}
     // 标记为用户定义的 Watcher
     // 用户定义的 Watcher 会有错误提示
@@ -471,7 +503,7 @@ export function stateMixin (Vue: Class<Component>) {
     // $watch 返回一个钩子
     // 调用后销毁 Watcher
     // 这里返回一个函数闭包中调用了 Watcher 的 teardown 方法
-    return function unwatchFn () {
+    return function unwatchFn() {
       watcher.teardown()
     }
   }

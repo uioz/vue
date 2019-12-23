@@ -4830,6 +4830,7 @@
     return function computedGetter () {
       var watcher = this._computedWatchers && this._computedWatchers[key];
       if (watcher) {
+        debugger;
         if (watcher.dirty) {
           watcher.evaluate();
         }
