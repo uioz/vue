@@ -206,7 +206,13 @@ export function getData(data: Function, vm: Component): any {
 const computedWatcherOptions = { lazy: true }
 
 /**
- * 
+ * 用于初始化计算属性, 利用给定的 vm 实例和给定的计算属性
+ * 这里特殊提示一下, 请牢记:
+ * 用户提供计算属性就是一个 getter 一个特殊的 getter.  
+ * 为什么特殊, 因为和 data 上的属性不同它是函数, 函数中可以利用上下文来引用其他的响应式属性.
+ * 而计算属性这个功能的根本目的就是定义一个 getter, 这个 getter 具有一些独到的优化理念请思考:
+ * 1. 由于可以引用其他的响应式属性, 如果其他的响应式属性被修改, 让这个 getter 自动计算新的值
+ * 2. 计算属性只在必要的时候求值(只在被需要使用的时候), 其余的时候不需要立即求值
  */
 function initComputed(vm: Component, computed: Object) {
   // $flow-disable-line
@@ -236,8 +242,10 @@ function initComputed(vm: Component, computed: Object) {
       )
     }
 
-    // 在 SSR 的情况下, 将 computed 上的每一个初始化完成的属性
+    // 在非 SSR 的情况下, 将 computed 上的每一个初始化完成的属性
     // 添加到 vm._computedWatchers 上
+    // 在 SSR 的情况下 Watcher 是不会执行的, 因为 SSR 只会渲染组件部分状态去渲染一个 HTML 快照
+    // 响应式系统根本没有初始化的必要
     if (!isSSR) {
       // create internal watcher for the computed property.
       watchers[key] = new Watcher(
@@ -326,14 +334,27 @@ function createComputedGetter(key) {
   return function computedGetter() {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
-      // 调用 Watcher 进行求值
+      
+      /**
+       * 关键字: 脏检查(脏数据检查). 
+       * 理解这里请牢记几个原则:
+       * 计算属性是惰性求值的, 依赖的响应式属性值虽然发生了变化, 但是计算属性并不一定立即计算
+       * 当计算属性求值的时候如果数据发生了变化这里的 dirty 会发生变化, 那么说明依赖的数据发生了变化
+       * 需要重新求值此时的 dirty 为 true, 当然求完值以后 dirty 就变成了 false
+       */
       if (watcher.dirty) {
         watcher.evaluate()
       }
-      // TODO 依赖收集
+      
+      // TODO: 待证实
+      // 计算属性本身不是响应式属性, 但是可以被 Watcher 进行观察
+      // 如何做到呢? 很简单如果计算属性依赖的响应式属性去收集 "观察计算属性的 Watcher"
+      // 那么当依赖的数据发生变化, 对应的 Watcher 会被触发, 从而让计算属性重新计算
       if (Dep.target) {
         watcher.depend()
       }
+      
+      // 计算出的值会被缓存在 Watcher 上面, 这里就返回好了在 evaluate 方法中会获取最新的计算值
       return watcher.value
     }
   }
