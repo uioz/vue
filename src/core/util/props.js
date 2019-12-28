@@ -24,11 +24,18 @@ export function validateProp (
   propsData: Object,
   vm?: Component
 ): any {
+
+  // key 对应的校验对象
   const prop = propOptions[key]
+  // key 所对应的数据是否未被传入
+  // true 表示仅仅声明了 key 的格式
+  // 但是在初始化的过程中并未为其传递数据
   const absent = !hasOwn(propsData, key)
   let value = propsData[key]
+
   // boolean casting
   const booleanIndex = getTypeIndex(Boolean, prop.type)
+  // prop.type 中是否存在 boolean 类型
   if (booleanIndex > -1) {
     if (absent && !hasOwn(prop, 'default')) {
       value = false
@@ -41,6 +48,7 @@ export function validateProp (
       }
     }
   }
+  // TODO:
   // check default value
   if (value === undefined) {
     value = getPropDefaultValue(vm, prop, key)
@@ -178,6 +186,9 @@ function assertType (value: any, type: Function): {
  * Use function string name to check built-in types,
  * because a simple equality check will fail when running
  * across different vms / iframes.
+ * 
+ * 在不同的 JavaScript 运行环境中构造函数的地址不同所以简单的
+ * 相等性判断会失效这里将函数转为字符串确保后续的比较准确无误
  */
 function getType (fn) {
   const match = fn && fn.toString().match(/^\s*function (\w+)/)
@@ -189,9 +200,13 @@ function isSameType (a, b) {
 }
 
 function getTypeIndex (type, expectedTypes): number {
+  // 不是数组 [Number,String] 由构造函数组成的数组
   if (!Array.isArray(expectedTypes)) {
     return isSameType(expectedTypes, type) ? 0 : -1
   }
+  // 如果是 [Number,String] 这种类型的属性
+  // 尝试进行类型判断, 只要 type 和和期待的类型
+  // 存在匹配就返回类型所对应的数组下标
   for (let i = 0, len = expectedTypes.length; i < len; i++) {
     if (isSameType(expectedTypes[i], type)) {
       return i

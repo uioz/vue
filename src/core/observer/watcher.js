@@ -253,8 +253,12 @@ export default class Watcher {
     if (this.lazy) { // 惰性求值
       this.dirty = true
     } else if (this.sync) {
-      // 当数据变化后是否同步响应对应的 Watcher
-      // 一般来讲所有的 Wacher 都是异步的
+      /**
+       * 当数据变化后是否同步响应对应的 Watcher, 反之将任务进行排队然后交由 nextTick 异步执行
+       * 这样做是处于性能考虑, 一般来说我们在 Watcher 中执行的代码是会修改 data 从而导致页面重新渲染
+       * 所以 Vue 选择了集中更新 Watcher 然后只触发一次渲染
+       * 当然你可以提供 sync 选项让其同步执行
+       */
       this.run()
     } else {
       // 将 Watcher 放入响应式任务队列

@@ -75,23 +75,34 @@ export function initState(vm: Component) {
  * @param {Object} propsOptions 
  */
 function initProps(vm: Component, propsOptions: Object) {
-  // 获取用于测试的 propsData
+
+  // propsData 上存储的是 prop 的初始数据
+  // 可以从构建选项中传入, 也可以通过父组件绑传入数据
   const propsData = vm.$options.propsData || {}
   // 获取 props, 注意数组类型的 props 在通过 mergeOptions 后变为对象类型
   const props = vm._props = {}
   // 缓存 prop 的键, 在随后的执行中便于迭代使用, 用于替代 Object.keys 动态获取.
   const keys = vm.$options._propKeys = []
+  // 这个实例是否是 root 节点
   const isRoot = !vm.$parent
   // root instance props should be converted
+  // 如果是根节点上的 props 没有必要进行响应式处理
+  // 因为没有组件会向父组件传入 props 也不会在运行时修改 props
   if (!isRoot) {
     toggleObserving(false)
   }
+
   for (const key in propsOptions) {
     keys.push(key)
+    // 校验 props 是否和定义 props 时所约定的格式一样
     const value = validateProp(key, propsOptions, propsData, vm)
+
+    // 这个分支只有在非生产模式下生效
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
       const hyphenatedKey = hyphenate(key)
+      // 当 props 和 html 保留属性重名
+      // 则进行错误提示
       if (isReservedAttribute(hyphenatedKey) ||
         config.isReservedAttr(hyphenatedKey)) {
         warn(
@@ -99,6 +110,8 @@ function initProps(vm: Component, propsOptions: Object) {
           vm
         )
       }
+      // 当 props 被修改后进行错误提示
+      // 回调函数在用户尝试修改 props 的时候执行
       defineReactive(props, key, value, () => {
         if (!isRoot && !isUpdatingChildComponent) {
           warn(
@@ -111,11 +124,18 @@ function initProps(vm: Component, propsOptions: Object) {
         }
       })
     } else {
+      // 这个分支在生产模式下执行
       defineReactive(props, key, value)
     }
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+    // 在 vue 中我们可以通过 this.xxx 来获取数据
+    // 但是 props 数据实际上在 _props 中存储
+    // 这里通过代理模式将所有的 this.xxx 访问
+    // 转移到对 _props 上来获取 _props 中的内容
+    // 同样的 data 中也是这样操作的
+    // !(key in vm) 与 Vue.extend 有关, 请阅读相关内容
     if (!(key in vm)) {
       proxy(vm, `_props`, key)
     }

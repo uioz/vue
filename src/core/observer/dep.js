@@ -47,16 +47,15 @@ export default class Dep {
   notify () {
     // stabilize the subscriber list first
     const subs = this.subs.slice()
-    // 在非生产模式下且使用了 vue.config.async = true
+    // 在非生产模式下且使用了 vue.config.async = true 默认 false
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
       // we need to sort them now to make sure they fire in correct
       // order
-      // subs 中存放的是 Watcher 在此处被称为订阅
-      // 如果提供了 async 配置, 则 Watcher 的执行是异步的
-      // 但是 Watcher 的执行顺序应该和定义时一致
-      // 利用 Watcher 创建时候提供的自增 id 
-      // 然后进行排序, 在异步继发执行
+      // 在默认的情况下 Watcher 是异步执行的借助于 flushSchedulerQueue 函数, 该函数中
+      // 在执行前也对 Watcher 进行了排序以确保 Watcher 的执行顺序和定义时一致
+      // config.async=true 表示要同步执行, 我们不在利用 flushSchedulerQueue 函数
+      // 所以这里我们进行手动排序
       subs.sort((a, b) => a.id - b.id)
     }
     // 循环 subs 执行其中的 Watcher 的 update 方法

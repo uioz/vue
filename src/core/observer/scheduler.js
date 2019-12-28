@@ -241,9 +241,15 @@ export function queueWatcher (watcher: Watcher) {
     // 不是, 那么赶紧要求浏览器更新异步任务队列
     // 因为我们有任务了!
     if (!waiting) {
-      // 正在等待浏览器异步更新 Watcher 
+      // 表示正在等待浏览器异步更新 Watcher 
       waiting = true
 
+      // 请注意这里的 config.async 它是 Vue 的全局的配置选项
+      // 如果值为 true 表示 Watcher 同步更新
+      // 反之交由 nextTick 异步执行
+      // 在 Vue 的官方测试套件 vue-test-utils 中测试单文件组件的时候
+      // 数据的改变带来的更新会同步执行, 该工具利用了这个选项
+      // 当然这个选项只有在生产环境中可以使用
       if (process.env.NODE_ENV !== 'production' && !config.async) {
         flushSchedulerQueue()
         return
