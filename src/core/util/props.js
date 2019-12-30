@@ -18,6 +18,11 @@ type PropOptions = {
   validator: ?Function
 };
 
+/**
+ * validateProp 会在 prop 初始化以及
+ * 不要忘记了 props 是会变化的, 
+ * 变化后依然使用需要校验, 此时调用的就是这个函数 
+ */
 export function validateProp (
   key: string,
   propOptions: Object,
@@ -26,6 +31,7 @@ export function validateProp (
 ): any {
 
   // key 对应的校验对象
+  // 我把它称为 prop声明(后文中会使用到)
   const prop = propOptions[key]
   // key 所对应的数据是否未被传入
   // true 表示仅仅声明了 key 的格式
@@ -37,28 +43,45 @@ export function validateProp (
   const booleanIndex = getTypeIndex(Boolean, prop.type)
   // prop.type 中是否存在 boolean 类型
   if (booleanIndex > -1) {
+    // 1. 没有向 props 传入数据
+    // 2. 没有给定默认值
     if (absent && !hasOwn(prop, 'default')) {
+      // 给定默认值 false
       value = false
+      // 在 html 中 <div props="props" > 以及 <div props="" > 以及 <div props >
     } else if (value === '' || value === hyphenate(key)) {
       // only cast empty string / same name to boolean if
       // boolean has higher priority
       const stringIndex = getTypeIndex(String, prop.type)
+      // 但是如果类型校验是一个数组且 Boolean 在 String 前面
+      // 则默认值是 true 反之就是空串
       if (stringIndex < 0 || booleanIndex < stringIndex) {
         value = true
       }
     }
   }
-  // TODO:
-  // check default value
+
+  // value 保存的是 props 传入的值
+  // 如果没有传入则 value 值为 undefined
+  // 此时来通过 prop声明 获取默认值
   if (value === undefined) {
+    // 这个函数会获取默认值
+    // 也就是 prop声明 上定义的默认函数
     value = getPropDefaultValue(vm, prop, key)
     // since the default value is a fresh copy,
     // make sure to observe it.
+    // 不要忘记了此时 shouldObserve 可能是 false
+    // 但是我们需要为 value 建立观察
+    // 所以预先缓存之前的状态
     const prevShouldObserve = shouldObserve
+    // 然后允许观察
     toggleObserving(true)
+    // 观察这个对象
     observe(value)
+    // 切换回原来的状态
     toggleObserving(prevShouldObserve)
   }
+
   if (
     process.env.NODE_ENV !== 'production' &&
     // skip validation for weex recycle-list child component props
@@ -66,6 +89,8 @@ export function validateProp (
   ) {
     assertProp(prop, key, value, vm, absent)
   }
+
+  // 将建立观察的值返回
   return value
 }
 
@@ -112,6 +137,9 @@ function assertProp (
   vm: ?Component,
   absent: boolean
 ) {
+  // 如果 prop 声明了 required
+  // 又没有传入其他值
+  // 提示错误
   if (prop.required && absent) {
     warn(
       'Missing required prop: "' + name + '"',
@@ -119,12 +147,19 @@ function assertProp (
     )
     return
   }
+  // undefined 或者 null
+  // 直接返回没有校验的必要
   if (value == null && !prop.required) {
     return
   }
+
+
   let type = prop.type
+  // valid = value是否合法 true 合法 false 不合法
+  // type=true 表示不需要校验, 同时 vaild 默认合法
   let valid = !type || type === true
   const expectedTypes = []
+  // 根据类型进行校验
   if (type) {
     if (!Array.isArray(type)) {
       type = [type]
@@ -135,7 +170,7 @@ function assertProp (
       valid = assertedType.valid
     }
   }
-
+  // 不合法的参数进行提示
   if (!valid) {
     warn(
       getInvalidTypeMessage(name, value, expectedTypes),
@@ -143,8 +178,10 @@ function assertProp (
     )
     return
   }
+  // 执行用户自定义的校验函数
   const validator = prop.validator
   if (validator) {
+    // 如果不合法就提示错误
     if (!validator(value)) {
       warn(
         'Invalid prop: custom validator check failed for prop "' + name + '".',
