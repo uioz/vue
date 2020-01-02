@@ -389,7 +389,9 @@ function createGetterInvoker(fn) {
 function initMethods(vm: Component, methods: Object) {
   const props = vm.$options.props
   for (const key in methods) {
+    // 在生产环境下检查
     if (process.env.NODE_ENV !== 'production') {
+      // 方法不是函数提示错误
       if (typeof methods[key] !== 'function') {
         warn(
           `Method "${key}" has type "${typeof methods[key]}" in the component definition. ` +
@@ -397,12 +399,15 @@ function initMethods(vm: Component, methods: Object) {
           vm
         )
       }
+      // 如果和 props 重名提示错误
       if (props && hasOwn(props, key)) {
         warn(
           `Method "${key}" has already been defined as a prop.`,
           vm
         )
       }
+
+      // 如果是保留关键字提示错误
       if ((key in vm) && isReserved(key)) {
         warn(
           `Method "${key}" conflicts with an existing Vue instance method. ` +
@@ -410,6 +415,10 @@ function initMethods(vm: Component, methods: Object) {
         )
       }
     }
+
+    // 将 methods 的上下文于 vm 绑定后
+    // 将这些方法按照原来的 key 挂载到
+    // vm 实例上
     vm[key] = typeof methods[key] !== 'function' ? noop : bind(methods[key], vm)
   }
 }

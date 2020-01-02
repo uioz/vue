@@ -401,27 +401,21 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
 
 /**
  * 将两个配置选项合并成一个新的.
- * 可以合并实例化或者继承的options.
- * 
- * 分为三种情况
- * 1. 合并 extends 的组件
- * 2. 合并实例和组件
- * 3. 合并实例
+ * Vue 内部工具类利用它们来实例化和实现继承.
  */
 export function mergeOptions (
   parent: Object,
   child: Object,
   vm?: Component
 ): Object {
-  // 在开发环境下
-  // 检测注册的组件名称是否合法
+  // 在开发环境下, 检测注册的组件名称是否符合 html 规范
   if (process.env.NODE_ENV !== 'production') {
     checkComponents(child)
   }
 
   /**
-   * TODO 待证实
-   * 未知功能, 用于函数组件, 还是继承组件?
+   * 如果 child 是一个构造函数
+   * 那么获取它的参数选项
    */
   if (typeof child === 'function') {
     child = child.options
@@ -438,13 +432,16 @@ export function mergeOptions (
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
-  // 将扩展(extends) 和 mixins 合并到子组件的 options 上
-  // TODO 待证实
-  // 一个 new Vue(options) 实例是不会走内部的 if 判断的
+  /**
+   * 将 extends 和 mixins 上的内容应用到子类的选项中, 
+   * 但是只允许那些 raw options (不是从 mergeOptions 返回的 options)执行.  
+   */
   if (!child._base) {
+    // 合并 extends
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
     }
+    // 合并 mixins
     if (child.mixins) {
       for (let i = 0, l = child.mixins.length; i < l; i++) {
         parent = mergeOptions(parent, child.mixins[i], vm)

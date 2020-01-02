@@ -161,11 +161,16 @@ function assertProp (
   const expectedTypes = []
   // 根据类型进行校验
   if (type) {
+    // 如果 type 是非数组例如 Number String
+    // 转为数组
     if (!Array.isArray(type)) {
       type = [type]
     }
     for (let i = 0; i < type.length && !valid; i++) {
+      // 判断给定的 value 是否符合 type 期待的类型
       const assertedType = assertType(value, type[i])
+      // 收集返回的错误类型
+      // 当验证失败的时候提示用户 value 的类型不在期待类型中
       expectedTypes.push(assertedType.expectedType || '')
       valid = assertedType.valid
     }

@@ -5038,6 +5038,8 @@
   }
 
   function resolveConstructorOptions (Ctor) {
+
+    debugger;
     var options = Ctor.options;
     if (Ctor.super) {
       var superOptions = resolveConstructorOptions(Ctor.super);

@@ -29,22 +29,21 @@ export function initMixin (Vue: Class<Component>) {
       mark(startTag)
     }
 
-    // 一个防止vm实例自身被响应式数据监听的 flag
+    // 一个防止vm实例自身被建立观察的 flag
     vm._isVue = true
 
-    /**
-     * TODO 待证实
-     * 合并组件配置, 子组件和父组件, 继承,混入
-     */
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
-      // 将全局 Vue 构造函数上的 options 和传入的 options 进行合并
+
       /**
-       * Vue 实例选项和 Vue 构造函数配置进行合并
+       * 将 Vue 构造函数上的 options (全局选项)
+       * 和建立 Vue 实例时候提供的参数对象
+       * 以及 this 传入到 mergeOptions 中去
+       * 最后挂载到 vm.$options 上.
        */
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor), // resolveConstructorOptions 处理了使用了 extends 情况下的 options
@@ -173,16 +172,26 @@ export function initInternalComponent (vm: Component, options: InternalComponent
   }
 }
 
+/**
+ * 函数名称解析(并返回)"构造器"上的选项
+ * 
+ * 在一个 Vue 实例创建的时候, 此时的 Ctor 参数就是
+ * vm.constructor 也就是 Vue 函数本身. (Ctor === Vue) === true 
+ * 
+ * Vue 是有继承功能的, 借助于 Vue.extend 接口.  
+ * 继承会返回一个新的构造函数, 所以并不一直都是 vm.constructor
+ */
 export function resolveConstructorOptions (Ctor: Class<Component>) {
+
   let options = Ctor.options
   /**
-   * TODO 待验证
-   * 使用 Vue.extends 或者添加 extends 选项的时候, 父元素中会存在 super 属性, 所以常见的 Vue 实例不会走这个环节
-   * if 内部的代码目的是合并父类的 options 和 子类的 options
+   * 使用 Vue.extend 生产的子类, 拥有 super 属性
    */
   if (Ctor.super) {
+    // 解析 super 的 options
     const superOptions = resolveConstructorOptions(Ctor.super)
     const cachedSuperOptions = Ctor.superOptions
+
     if (superOptions !== cachedSuperOptions) {
       // super option changed,
       // need to resolve new options.
