@@ -73,7 +73,18 @@ function mergeData (to: Object, from: ?Object): Object {
 }
 
 /**
- * 初始化过程中用于合并父子元素 data
+ * 合并父子选项中的 data 属性
+ * data 属性可以是 object 也可以是 function
+ * 不要忘记了子组件必须是 function
+ * 
+ * **注意**: 下面的内容建议看完这个函数后在阅读
+ * 这个方法最后会返回一个延迟求值(对于 data)的函数.  
+ * 为什么不一开始就直接合并 data 中的数据呢?  
+ * 因为在 Vue 的生命周期中 props 是要先于 data 的初始化
+ * 但是在利用选项的构建 Vue 实例的过程中不可避免的 data
+ * 的数据合并先于 props 处理, 为了满足上面的要求, 这里返回了一个
+ * 延迟求值函数, 在生命周期中 props 初始化完成后在
+ * 调用这里返回的函数求 data 中的值, 这确保了在 data 中可以正确的获取 props 中的数据
  */
 export function mergeDataOrFn (
   parentVal: any,
@@ -83,6 +94,8 @@ export function mergeDataOrFn (
   // 组件合并逻辑
   if (!vm) {
     // in a Vue.extend merge, both should be functions
+    // 这个分支, 在 Vue.extend 进行选项合并的时候执行
+    // 两者的 data 选项都必须是 function
     if (!childVal) {
       return parentVal
     }
@@ -94,6 +107,12 @@ export function mergeDataOrFn (
     // merged result of both functions... no need to
     // check if parentVal is a function here because
     // it has to be a function to pass previous merges.
+
+    // 当 parentVal 和 childVal 都存在的时候
+    // 我们返回了一个会返回合并两个函数执行结果的函数
+    // 我们不需要检测 parentVal 是不是一个函数, 因为当遇到
+    // 多重继承的时候,父组件的 parentVal 有可能就是一个
+    // 这里返回的 mergedDataFn
     return function mergedDataFn () {
       return mergeData(
         typeof childVal === 'function' ? childVal.call(this, this) : childVal,
@@ -101,14 +120,14 @@ export function mergeDataOrFn (
       )
     }
   } else {
-    /**
-     * 返回的函数实际上是 data 在接入响应式前的初始化
-     */
+    // Vue 实例初始化走的就是这个分支
     return function mergedInstanceDataFn () {
       // instance merge
       const instanceData = typeof childVal === 'function'
         ? childVal.call(vm, vm)
         : childVal
+      // PS: 在实例化的情况下 parentVal 是不存在的
+      // 因为 Vue 根实例没有父组件
       const defaultData = typeof parentVal === 'function'
         ? parentVal.call(vm, vm)
         : parentVal
@@ -129,7 +148,7 @@ strats.data = function (
   childVal: any,
   vm?: Component
 ): ?Function {
-  // 没有 vm 说明就是组件
+  // 没有 vm 说明处理的是子组件的选项
   if (!vm) {
     // 组件的 data 必须是 function
     if (childVal && typeof childVal !== 'function') {
@@ -466,7 +485,11 @@ export function mergeOptions (
   // options 上的不同的键有不同的合并方法
   // 这个函数中提供了所有的键的合并策略
   function mergeField (key) {
+    // strats 上保存着实例选项对应的合并策略
+    // 如果没有对应的策略就使用默认的策略
     const strat = strats[key] || defaultStrat
+    // 调用合并策略返回的合并后的内容以实例选项的键名
+    // 挂载到 options 上
     options[key] = strat(parent[key], child[key], vm, key)
   }
   return options

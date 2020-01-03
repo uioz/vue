@@ -1217,6 +1217,7 @@
     childVal,
     vm
   ) {
+    debugger;
     if (!vm) {
       // in a Vue.extend merge, both should be functions
       if (!childVal) {
@@ -4533,7 +4534,6 @@
    * Will be called when a dependency changes.
    */
   Watcher.prototype.update = function update () {
-    debugger;
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true;
@@ -4830,7 +4830,6 @@
     return function computedGetter () {
       var watcher = this._computedWatchers && this._computedWatchers[key];
       if (watcher) {
-        debugger;
         if (watcher.dirty) {
           watcher.evaluate();
         }
@@ -5039,7 +5038,6 @@
 
   function resolveConstructorOptions (Ctor) {
 
-    debugger;
     var options = Ctor.options;
     if (Ctor.super) {
       var superOptions = resolveConstructorOptions(Ctor.super);
