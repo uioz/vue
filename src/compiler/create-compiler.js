@@ -5,9 +5,8 @@ import { detectErrors } from './error-detector'
 import { createCompileToFunctionFn } from './to-function'
 
 /**
- * 该函数返回一个函数构成一个闭包, 通过依赖注入的方式提供基本编译函数.  
- * TODO: 待证实, 通过基本编译函数可以在不同平台中提供编译阶段优化.  
- * @param baseCompile 基本编译函数
+ * createCompilerCreator 接收一个基本编辑函数
+ * @param baseCompile 基本编译器
  */
 export function createCompilerCreator (baseCompile: Function): Function {
   /**
@@ -17,6 +16,15 @@ export function createCompilerCreator (baseCompile: Function): Function {
    */
   return function createCompiler (baseOptions: CompilerOptions) {
 
+
+    // 在当前的函数闭包中我们
+    // 已经有一个 baseCompile 编译函数了
+    // 为什么这里还有一个 compile 呢?
+    // 因为 createCompiler 是一个高阶函数
+    // createCompiler 本身不提供 "编译" 能力
+    // 它接收一个 "编译选项"
+    // 最后这里的 compile 函数将 "编译器" 与 "编译选项" 相结合
+    // 后进行编译
     function compile (
       template: string,
       options?: CompilerOptions

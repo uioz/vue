@@ -18,21 +18,29 @@ function createFunction (code, errors) {
   }
 }
 
+// 函数名称: 创建一个将编译器转为函数的函数
+// 所以它接收一个 compile(编译器) 也就是编译函数
+// 而返回一个 "被转为函数的编译器"
 export function createCompileToFunctionFn (compile: Function): Function {
   const cache = Object.create(null)
 
+  // 这个函数实际上就是 Web 端将 template 编译为 render 的本体
   return function compileToFunctions (
     template: string,
     options?: CompilerOptions,
     vm?: Component
   ): CompiledFunctionResult {
+
     options = extend({}, options)
+
     const warn = options.warn || baseWarn
     delete options.warn
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production') {
       // detect possible CSP restriction
+      // 检测是否存在 CSP(内容安全策略) 限制
+      // CSP 可以禁止页面执行不安全的代码, 而 Vue 正是利用这点进行编译的
       try {
         new Function('return 1')
       } catch (e) {
@@ -49,17 +57,25 @@ export function createCompileToFunctionFn (compile: Function): Function {
     }
 
     // check cache
+    // 检测是否存在缓存
+    // 如果提供了 delimiters  see https://cn.vuejs.org/v2/api/#delimiters
+    // 则将 delimiters 和 template 结合起来作为键名
+    // 用于在 cache 中去重
     const key = options.delimiters
       ? String(options.delimiters) + template
       : template
+    // 返回缓存的内容(如果缓存中存在内容)
     if (cache[key]) {
       return cache[key]
     }
-
+    
     // compile
+    // 编译
     const compiled = compile(template, options)
 
     // check compilation errors/tips
+    // 检测编译中产生的 错误/提示
+    // 然后把他们打印到控制台中
     if (process.env.NODE_ENV !== 'production') {
       if (compiled.errors && compiled.errors.length) {
         if (options.outputSourceRange) {
@@ -88,6 +104,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
     }
 
     // turn code into functions
+    // 将代码转为函数
     const res = {}
     const fnGenErrors = []
     res.render = createFunction(compiled.render, fnGenErrors)

@@ -89,6 +89,7 @@ Vue.prototype.$mount = function (
        * **注意**: template 目前可能的类型有 string element
        * 返回两个渲染函数, render 就是标准的渲染函数
        * staticRenderFns 值渲染静态部分, 也就是说结果中不包含 v-if 这种动态的内容
+       * 该函数的位置在 src\compiler\to-function.js 中
        */
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
