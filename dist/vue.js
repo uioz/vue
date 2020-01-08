@@ -1078,7 +1078,6 @@
    * already exist.
    */
   function set (target, key, val) {
-    debugger;
     if (isUndef(target) || isPrimitive(target)
     ) {
       warn(("Cannot set reactive property on undefined, null, or primitive value: " + ((target))));
@@ -1114,7 +1113,6 @@
    * Delete a property and trigger change if necessary.
    */
   function del (target, key) {
-    debugger;
     if (isUndef(target) || isPrimitive(target)
     ) {
       warn(("Cannot delete reactive property on undefined, null, or primitive value: " + ((target))));
@@ -1217,7 +1215,6 @@
     childVal,
     vm
   ) {
-    debugger;
     if (!vm) {
       // in a Vue.extend merge, both should be functions
       if (!childVal) {
@@ -4377,7 +4374,6 @@
    * pushed when the queue is being flushed.
    */
   function queueWatcher (watcher) {
-    debugger;
     var id = watcher.id;
     if (has[id] == null) {
       has[id] = true;
@@ -4549,7 +4545,6 @@
    * Will be called by the scheduler.
    */
   Watcher.prototype.run = function run () {
-    debugger;
     if (this.active) {
       var value = this.get();
       if (
@@ -4589,7 +4584,6 @@
    * Depend on all deps collected by this watcher.
    */
   Watcher.prototype.depend = function depend () {
-    debugger;
     var i = this.deps.length;
     while (i--) {
       this.deps[i].depend();
@@ -4876,7 +4870,6 @@
   }
 
   function initWatch (vm, watch) {
-    debugger;
     for (var key in watch) {
       var handler = watch[key];
       if (Array.isArray(handler)) {
@@ -11673,8 +11666,6 @@
         }
       }
 
-      debugger;
-
       // check cache
       var key = options.delimiters
         ? String(options.delimiters) + template
@@ -11761,12 +11752,14 @@
           (tip ? tips : errors).push(msg);
         };
 
+        
         if (options) {
           if (options.outputSourceRange) {
             // $flow-disable-line
             var leadingSpaceLength = template.match(/^\s*/)[0].length;
 
             warn = function (msg, range, tip) {
+              debugger;
               var data = { msg: msg };
               if (range) {
                 if (range.start != null) {

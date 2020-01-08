@@ -107,6 +107,9 @@ export function createCompileToFunctionFn (compile: Function): Function {
     // 将代码转为函数
     const res = {}
     const fnGenErrors = []
+    // 将 template 转为渲染函数字符串
+    // 通过 new Function 变为函数
+    // 赋值到 res.render 上, 此时的 render 成为最终使用的 render 函数
     res.render = createFunction(compiled.render, fnGenErrors)
     res.staticRenderFns = compiled.staticRenderFns.map(code => {
       return createFunction(code, fnGenErrors)
