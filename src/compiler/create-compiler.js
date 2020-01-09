@@ -83,16 +83,18 @@ export function createCompilerCreator (baseCompile: Function): Function {
       finalOptions.warn = warn
 
       // template 就是模板字符串
-      // 已经合并后的编译选项
-      // compiled 保存的就是编译结果
+      // finalOptions 是编译选项
+      // compiled 则是编译器产生的结果
       // 对于 web 端带有编译器的版本
       // baseCompile 所在的位置为 src\compiler\index.js
       const compiled = baseCompile(template.trim(), finalOptions)
       if (process.env.NODE_ENV !== 'production') {
+        // 在编译过程中发现的错误如果发现在这里输出
         detectErrors(compiled.ast, warn)
       }
       compiled.errors = errors
       compiled.tips = tips
+      // 返回编译的结果
       return compiled
     }
 

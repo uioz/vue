@@ -24,6 +24,8 @@ export const createCompiler = createCompilerCreator(function baseCompile (
   // 生成代码
   const code = generate(ast, options)
   // 返回解析完成的内容
+  // 对于 web 端来讲, 这个闭包函数被调用的位置在
+  // src\compiler\create-compiler.js 中
   return {
     ast,
     render: code.render,

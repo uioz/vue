@@ -9282,6 +9282,7 @@
   }
 
   function parseHTML (html, options) {
+    debugger;
     var stack = [];
     var expectHTML = options.expectHTML;
     var isUnaryTag$$1 = options.isUnaryTag || no;
@@ -11759,7 +11760,6 @@
             var leadingSpaceLength = template.match(/^\s*/)[0].length;
 
             warn = function (msg, range, tip) {
-              debugger;
               var data = { msg: msg };
               if (range) {
                 if (range.start != null) {
@@ -11819,6 +11819,7 @@
     template,
     options
   ) {
+    debugger;
     var ast = parse(template.trim(), options);
     if (options.optimize !== false) {
       optimize(ast, options);

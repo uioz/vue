@@ -75,6 +75,7 @@ export function createASTElement (
 
 /**
  * Convert HTML string to AST.
+ * 转换 HTML 字符串为 AST(抽象语法树)
  */
 export function parse (
   template: string,
@@ -201,6 +202,7 @@ export function parse (
     }
   }
 
+  // 解析 HTML
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,

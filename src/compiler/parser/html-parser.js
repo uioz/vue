@@ -61,14 +61,19 @@ export function parseHTML (html, options) {
   while (html) {
     last = html
     // Make sure we're not in a plaintext content element like script/style
+    // 确保我们要处理的元素不是内容区域为 "纯文本" 的元素, 例如 script/style, 
+    // 是否允许这样操作是由 isPlainTextElement 决定的, 不要忘记了这个参数是外部传入的
     if (!lastTag || !isPlainTextElement(lastTag)) {
       let textEnd = html.indexOf('<')
       if (textEnd === 0) {
         // Comment:
+        // 如果根元素是注释
         if (comment.test(html)) {
           const commentEnd = html.indexOf('-->')
 
           if (commentEnd >= 0) {
+            // 是否保留注释
+            // 不要忘记了 shouldKeepComment 是由外部传入的
             if (options.shouldKeepComment) {
               options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3)
             }
