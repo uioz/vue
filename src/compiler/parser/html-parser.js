@@ -54,20 +54,27 @@ function decodeAttr (value, shouldDecodeNewlines) {
 export function parseHTML (html, options) {
   const stack = []
   const expectHTML = options.expectHTML
+  // 用来检测一个标签是否是一元标签
   const isUnaryTag = options.isUnaryTag || no
+  // 用来检测一个标签是否是可以省略闭合标签的非一元标签
   const canBeLeftOpenTag = options.canBeLeftOpenTag || no
   let index = 0
   let last, lastTag
+
+  // 随着 html 被解析 html 变量的内容会随之减少
+  // 最会变为 falsty
   while (html) {
+    // last 中保存处理中的 html 字符串的副本
     last = html
     // Make sure we're not in a plaintext content element like script/style
     // 确保我们要处理的元素不是内容区域为 "纯文本" 的元素, 例如 script/style, 
     // 是否允许这样操作是由 isPlainTextElement 决定的, 不要忘记了这个参数是外部传入的
+    // 另外当首次解析的时候 lastTag 是 undefined 也会执行这个分支
     if (!lastTag || !isPlainTextElement(lastTag)) {
       let textEnd = html.indexOf('<')
       if (textEnd === 0) {
         // Comment:
-        // 如果根元素是注释
+        // 是否是注释节点
         if (comment.test(html)) {
           const commentEnd = html.indexOf('-->')
 
@@ -75,14 +82,20 @@ export function parseHTML (html, options) {
             // 是否保留注释
             // 不要忘记了 shouldKeepComment 是由外部传入的
             if (options.shouldKeepComment) {
+              // html.substring(4, commentEnd) 获取的是注释中的内容
+              // 字符串截取从 4 开始也就是从 <!-- 后面开始
               options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3)
             }
+
+            // 推进解析继续前进
+            // 从注释后开始进行解析
             advance(commentEnd + 3)
             continue
           }
         }
 
         // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
+        // 如果是条件注释语句 即 <![]> 形式的注释
         if (conditionalComment.test(html)) {
           const conditionalEnd = html.indexOf(']>')
 
@@ -93,6 +106,7 @@ export function parseHTML (html, options) {
         }
 
         // Doctype:
+        // 如果是 html 声明
         const doctypeMatch = html.match(doctype)
         if (doctypeMatch) {
           advance(doctypeMatch[0].length)
@@ -100,6 +114,7 @@ export function parseHTML (html, options) {
         }
 
         // End tag:
+        // 如果是结束标签 即 </xxx>
         const endTagMatch = html.match(endTag)
         if (endTagMatch) {
           const curIndex = index
@@ -109,9 +124,13 @@ export function parseHTML (html, options) {
         }
 
         // Start tag:
+        // 解析开标签
         const startTagMatch = parseStartTag()
         if (startTagMatch) {
+          // 处理解析到的开标签
           handleStartTag(startTagMatch)
+          // 是否忽略下个内容是换行符
+          // 这里是兼容性处理选择了解即可
           if (shouldIgnoreFirstNewline(startTagMatch.tagName, html)) {
             advance(1)
           }
@@ -149,6 +168,7 @@ export function parseHTML (html, options) {
         options.chars(text, index - text.length, index)
       }
     } else {
+      // 即将解析的内容处于 script/style/textarea 中
       let endTagLength = 0
       const stackedTag = lastTag.toLowerCase()
       const reStackedTag = reCache[stackedTag] || (reCache[stackedTag] = new RegExp('([\\s\\S]*?)(</' + stackedTag + '[^>]*>)', 'i'))
@@ -172,6 +192,8 @@ export function parseHTML (html, options) {
       parseEndTag(stackedTag, index - endTagLength, index)
     }
 
+    // 再经过上面的处理后
+    // last === html 则说明 last 中没有任何标签属于纯文本
     if (html === last) {
       options.chars && options.chars(html)
       if (process.env.NODE_ENV !== 'production' && !stack.length && options.warn) {
@@ -189,22 +211,32 @@ export function parseHTML (html, options) {
     html = html.substring(n)
   }
 
+  // 用于解析开始标签
+  // 注意这里的闭包是可以引用到
+  // 前方定义的变量的
+  // 如果没有解析到开标签或者没有闭合标签则返回 undefined
   function parseStartTag () {
     const start = html.match(startTagOpen)
+    // 如果解析到了内容
     if (start) {
       const match = {
         tagName: start[1],
         attrs: [],
         start: index
       }
+      // 将解析进度推进一个开始标签的长度
       advance(start[0].length)
       let end, attr
+      // 没有匹配到开始标签的末尾即 > 符号
+      // 且存在 html 属性
+      // 换句话说如果匹配到了 > 符号则停止 while 循环
       while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
         attr.start = index
         advance(attr[0].length)
         attr.end = index
         match.attrs.push(attr)
       }
+      // 有可能关闭标签没有提供, 类似与 <div 的效果
       if (end) {
         match.unarySlash = end[1]
         advance(end[0].length)
