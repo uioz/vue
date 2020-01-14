@@ -9282,7 +9282,6 @@
   }
 
   function parseHTML (html, options) {
-    debugger;
     var stack = [];
     var expectHTML = options.expectHTML;
     var isUnaryTag$$1 = options.isUnaryTag || no;
@@ -9452,7 +9451,6 @@
           parseEndTag(tagName);
         }
       }
-
       var unary = isUnaryTag$$1(tagName) || !!unarySlash;
 
       var l = match.attrs.length;
@@ -9477,7 +9475,6 @@
         stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end });
         lastTag = tagName;
       }
-
       if (options.start) {
         options.start(tagName, attrs, unary, match.start, match.end);
       }
@@ -9909,6 +9906,7 @@
         }
       }
     });
+    debugger;
     return root
   }
 
