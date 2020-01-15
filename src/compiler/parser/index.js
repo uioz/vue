@@ -202,10 +202,18 @@ export function parse (
     }
   }
 
-  // 解析 HTML 
-  // 通过提供的回掉
-  // 来修改当前作用域下的 root 属性
-  // root 就是最终解析完成的 AST 的本体
+  // 解析 HTML 代码
+  // 主要的解析方式就是通过 parseHTML 逐个解析 html 标签
+  // 然后触发选项提供的不同的 callback
+  // callback 中会向当前处理的标签对应的 AST 节点
+  // 根据标签提供的参数, 属性 , 指令等
+  // 向 AST 上挂载对应的属性
+  // 以及兼容性处理, 这部分代码十分复杂以及琐碎
+  // 实际上没有大大的阅读价值,
+  // 除非你要研究解析的流程
+  // 否则你只需要知道返回的 root 就是 html 对应的 AST就可以
+  // 你可以在返回的位置断点, 然后传入不同的几个 template
+  // 来测试一下解析后的内容
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -271,16 +279,23 @@ export function parse (
         element = preTransforms[i](element, options) || element
       }
 
+      // 没有使用 v-pre
       if (!inVPre) {
         processPre(element)
         if (element.pre) {
           inVPre = true
         }
       }
+
+      // 处理使用 pre 的情况
       if (platformIsPreTag(element.tag)) {
         inPre = true
       }
+      // 如果使用了 v-pre
+      // 包括使用了 v-pre 元素本身以及对应的后代元素
       if (inVPre) {
+        // 处理标签上的属性为 raw 属性
+        // 不关心有关的指令
         processRawAttrs(element)
       } else if (!element.processed) {
         // structural directives
