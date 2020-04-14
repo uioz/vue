@@ -217,6 +217,8 @@ export function parse (
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
+    // 当解析到一个 开标签 的时候调用
+    // 包括一元标签例如 <br/>
     start (tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
@@ -271,16 +273,23 @@ export function parse (
         element = preTransforms[i](element, options) || element
       }
 
+      // 没有使用 v-pre
       if (!inVPre) {
         processPre(element)
         if (element.pre) {
           inVPre = true
         }
       }
+
+      // 处理使用 pre 的情况
       if (platformIsPreTag(element.tag)) {
         inPre = true
       }
+      // 如果使用了 v-pre
+      // 包括使用了 v-pre 元素本身以及对应的后代元素
       if (inVPre) {
+        // 处理标签上的属性为 raw 属性
+        // 不关心有关的指令
         processRawAttrs(element)
       } else if (!element.processed) {
         // structural directives
@@ -289,6 +298,8 @@ export function parse (
         processOnce(element)
       }
 
+      // 如果 root 未赋值
+      // 说明这个内容是根节点
       if (!root) {
         root = element
         if (process.env.NODE_ENV !== 'production') {
@@ -303,7 +314,7 @@ export function parse (
         closeElement(element)
       }
     },
-
+    // 当解析到闭标签的时候调用
     end (tag, start, end) {
       const element = stack[stack.length - 1]
       // pop stack
@@ -314,7 +325,7 @@ export function parse (
       }
       closeElement(element)
     },
-
+    // 解析到文本的时候调用
     chars (text: string, start: number, end: number) {
       if (!currentParent) {
         if (process.env.NODE_ENV !== 'production') {
@@ -386,6 +397,7 @@ export function parse (
         }
       }
     },
+    // 解析到注释的时候调用
     comment (text: string, start, end) {
       // adding anyting as a sibling to the root node is forbidden
       // comments should still be allowed, but ignored
@@ -403,6 +415,8 @@ export function parse (
       }
     }
   })
+
+  // 返回解析好的 AST 
   return root
 }
 

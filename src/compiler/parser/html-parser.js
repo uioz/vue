@@ -118,7 +118,9 @@ export function parseHTML (html, options) {
         const endTagMatch = html.match(endTag)
         if (endTagMatch) {
           const curIndex = index
+          // 前进匹配到 end 元素的字符串长度
           advance(endTagMatch[0].length)
+          // 解析闭标签
           parseEndTag(endTagMatch[1], curIndex, index)
           continue
         }
@@ -129,7 +131,9 @@ export function parseHTML (html, options) {
         if (startTagMatch) {
           // 处理解析到的开标签
           handleStartTag(startTagMatch)
-          // 是否忽略下个内容是换行符
+          // 是否忽略下个内容是换行符, 例如:
+          // <div>
+          // 123</div>
           // 这里是兼容性处理选择了解即可
           if (shouldIgnoreFirstNewline(startTagMatch.tagName, html)) {
             advance(1)
@@ -238,6 +242,9 @@ export function parseHTML (html, options) {
       }
       // 有可能关闭标签没有提供, 类似与 <div 的效果
       if (end) {
+        // unarySlash 保存的是 <br /> 中的 / 
+        // 一元元素名称可以使用 / 来结尾, 
+        // 在 Vue 中自定义组件在模板中也可以利用此种方法结尾
         match.unarySlash = end[1]
         advance(end[0].length)
         match.end = index
@@ -259,10 +266,12 @@ export function parseHTML (html, options) {
       }
     }
 
+    // 是一元标签
     const unary = isUnaryTag(tagName) || !!unarySlash
 
     const l = match.attrs.length
     const attrs = new Array(l)
+    // 格式化 attrs
     for (let i = 0; i < l; i++) {
       const args = match.attrs[i]
       const value = args[3] || args[4] || args[5] || ''
@@ -279,8 +288,11 @@ export function parseHTML (html, options) {
       }
     }
 
+    // 如果不是 一元 标签 例如 <hr /> 
+    // 则压入到 stack 中
     if (!unary) {
       stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end })
+      // lastTag 赋值为最新的非一元标签的名称
       lastTag = tagName
     }
 
@@ -289,7 +301,13 @@ export function parseHTML (html, options) {
     }
   }
 
+  /**
+   * 检测是否缺少闭合标签
+   * 处理 stack 栈中剩余的标签
+   * 解析 </br> 与 </p> 标签，与浏览器的行为相同
+   */
   function parseEndTag (tagName, start, end) {
+
     let pos, lowerCasedTagName
     if (start == null) start = index
     if (end == null) end = index
