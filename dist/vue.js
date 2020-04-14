@@ -9282,7 +9282,6 @@
   }
 
   function parseHTML (html, options) {
-    debugger;
     var stack = [];
     var expectHTML = options.expectHTML;
     var isUnaryTag$$1 = options.isUnaryTag || no;
@@ -9594,7 +9593,6 @@
     options
   ) {
     warn$2 = options.warn || baseWarn;
-
     platformIsPreTag = options.isPreTag || no;
     platformMustUseProp = options.mustUseProp || no;
     platformGetTagNamespace = options.getTagNamespace || no;
@@ -11819,11 +11817,11 @@
     template,
     options
   ) {
-    debugger;
     var ast = parse(template.trim(), options);
     if (options.optimize !== false) {
       optimize(ast, options);
     }
+    debugger;
     var code = generate(ast, options);
     return {
       ast: ast,

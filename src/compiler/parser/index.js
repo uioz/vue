@@ -82,7 +82,8 @@ export function parse (
   options: CompilerOptions
 ): ASTElement | void {
   warn = options.warn || baseWarn
-
+  // 平台差异判断函数, 对特殊情况处理
+  // 例如 `platformIsPreTag` 会考虑是否处理 pre 标签, 因为 pre 标签需要保留换行等细节
   platformIsPreTag = options.isPreTag || no
   platformMustUseProp = options.mustUseProp || no
   platformGetTagNamespace = options.getTagNamespace || no
@@ -202,7 +203,11 @@ export function parse (
     }
   }
 
-  // 解析 HTML
+  // parseHtml 实际上是一个第三方的词法分析器, 原本的名词为 html-parser
+  // 当然 Vue 对其做了一些定制, 调用后解析完成的结果就是将 html 字符串转为对应的树状结构
+  // 而 html-parser 根据既定的规则去解析 html 对外提供了钩子, 这些钩子会在解析标签的时候调用
+  // vue 便是利用了这些钩子, 而钩子依赖了上方的函数, 而上方的函数时依赖特点平台的
+  // 不同平台由于编译目标不同, 在 vue 编译的时候会根据平台来更改上方的平台依赖
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
