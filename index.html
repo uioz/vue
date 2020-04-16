@@ -11,21 +11,23 @@
 
 <body>
   <div id="root">
-    {{ message }}
-    {{ hello }}
+    <template v-if="hello">
+      <div>{{hello}}</div>
+    </template>
+    <p>{{message}}</p>
   </div>
   <script>
     new Vue({
       el: '#root',
-      computed:{
-        hello(){
+      computed: {
+        hello() {
           return this.message + 123;
         }
       },
       data: {
-        message:123
+        message: 123
       },
-      mounted(){
+      mounted() {
 
         this.message = 456;
       }

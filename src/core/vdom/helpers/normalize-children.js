@@ -16,7 +16,12 @@ import { isFalse, isTrue, isDef, isUndef, isPrimitive } from 'shared/util'
 // thing with Array.prototype.concat. It is guaranteed to be only 1-level deep
 // because functional components already normalize their own children.
 
-// 模板编译器 TODO: 未完待续
+// 模板编译器试图通过在编译时静态分析模板来最小化对规范化的需求。
+// 对于纯HTML标记，可以完全跳过规范化，因为生成的渲染函数保证返回Array<VNode>。有两种情况需要额外的规范化：
+
+// 1. 当 children 包含组件 - 因为函数组件可能返回一个数组而不是一个根节点. 在这种情况下
+// 只需要简单的规范化 - 如果 children 是数组, 我们通过 Array.prototype.concat 来展平它们.
+// 它被保证只有一级深度，因为函数组件已经规范化了它们自己的子组件。
 export function simpleNormalizeChildren (children: any) {
   for (let i = 0; i < children.length; i++) {
     if (Array.isArray(children[i])) {
@@ -30,7 +35,13 @@ export function simpleNormalizeChildren (children: any) {
 // e.g. <template>, <slot>, v-for, or when the children is provided by user
 // with hand-written render functions / JSX. In such cases a full normalization
 // is needed to cater to all possible types of children values.
+
+// 2. 当 children 包含了总是返回嵌套数组的结构时:
+// 例如: <template>, <slot>, v-for, 或者是用户手写的渲染函数. 
+// 在这种情况下，需要完全规范化以适应所有可能类型的 children values。
 export function normalizeChildren (children: any): ?Array<VNode> {
+  // children 参数可以是字符串
+  // 这个是给用户 api 的一个特性
   return isPrimitive(children)
     ? [createTextVNode(children)]
     : Array.isArray(children)
@@ -42,6 +53,15 @@ function isTextNode (node): boolean {
   return isDef(node) && isDef(node.text) && isFalse(node.isComment)
 }
 
+/**
+ * 这个函数用于 vnode 的优化, 对于一个复杂逻辑的 vdom 其子结构可能是嵌套的
+ * 但是其中很多的节点实际上可以相互合并, 例如 <div>{{message}} {{gameover}}</div> 中的
+ * {{message}} 和 {{gameover}} 分别对应两个 vnode 对应 vdom 中两个 createElement 的调用
+ * 为了优化性能, 在此处会将两者进行合并为一个 vnode.
+ * 
+ * 合并的原理并不复杂, 递归 children 寻找到树形结构的叶片, 然后进行递归合并直到递归完成
+ * 另外, 合并主要合并的是文本节点.
+ */
 function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNode> {
   const res = []
   let i, c, lastIndex, last

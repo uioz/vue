@@ -104,8 +104,11 @@ export function _createElement (
     children.length = 0
   }
   // 牢记用户通过 createElement 时候
-  // normalizationType === ALWAYS_NORMALIZE 在上一级调用栈
-  // 已经做了此种处理
+  // normalizationType === ALWAYS_NORMALIZE 在上级调用栈被赋值, 此处一定执行
+  // 另外模板部分也会导致此处被设置为 ALWAYS_NORMALIZE
+  // 在下方的这个 if/else 中还存在着 normalizationType === undefined 的情况
+  // 这种情况不会执行下方的判断
+  // 注意: 这个环节实际上是一个优化环节, 简单的来讲会将原本复杂的 vnode 结构简化为等同功能但是节点更少的结构
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {
@@ -115,6 +118,7 @@ export function _createElement (
   if (typeof tag === 'string') {
     let Ctor
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
+    // 如果标签是保留字
     if (config.isReservedTag(tag)) {
       // platform built-in elements
       if (process.env.NODE_ENV !== 'production' && isDef(data) && isDef(data.nativeOn)) {
@@ -129,11 +133,14 @@ export function _createElement (
       )
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // component
+      // 是组件
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
       // unknown or unlisted namespaced elements
       // check at runtime because it may get assigned a namespace when its
       // parent normalizes children
+      // 未知或者未在命名空间中的元素在运行时检查
+      // 因为它有可能被它的父级规范化的时候合并
       vnode = new VNode(
         tag, data, children,
         undefined, undefined, context
@@ -141,6 +148,8 @@ export function _createElement (
     }
   } else {
     // direct component options / constructor
+    // 对于用户来说 createElement 的第一个参数除了字符串还可以是
+    // 组件选项对象, 或者一个函数
     vnode = createComponent(tag, data, context, children)
   }
   if (Array.isArray(vnode)) {
