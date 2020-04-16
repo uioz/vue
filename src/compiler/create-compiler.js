@@ -16,15 +16,12 @@ export function createCompilerCreator (baseCompile: Function): Function {
    */
   return function createCompiler (baseOptions: CompilerOptions) {
 
-
-    // 在当前的函数闭包中我们
-    // 已经有一个 baseCompile 编译函数了
-    // 为什么这里还有一个 compile 呢?
-    // 因为 createCompiler 是一个高阶函数
-    // createCompiler 本身不提供 "编译" 能力
-    // 它接收一个 "编译选项"
-    // 最后这里的 compile 函数将 "编译器" 与 "编译选项"(baseOptions) 相结合
-    // 后进行编译
+    // createCompilerCreator 所接收的 baseCompile 用于将 html 模板编译为
+    // 1. ast
+    // 2. 符合 vdom 接口的代码(字符串) 通过 eval 或者 new function 执行
+    // 3. 可以被静态渲染的函数, 即不会因为状态改变发生变化的那部分模板
+    // 此处的 complie 函数还做了很多额外的工作而不仅仅是完成编译
+    // 在 complie 函数内部会调用 baseComplie 函数进行编译
     function compile (
       template: string,
       options?: CompilerOptions
@@ -89,7 +86,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
       // baseCompile 所在的位置为 src\compiler\index.js
       const compiled = baseCompile(template.trim(), finalOptions)
       if (process.env.NODE_ENV !== 'production') {
-        // 在编译过程中发现的错误如果发现在这里输出
+        // 在编译过程中发现的 Vue 语法错误会在这里进行检查
         detectErrors(compiled.ast, warn)
       }
       compiled.errors = errors

@@ -40,11 +40,16 @@ export type CodegenResult = {
   staticRenderFns: Array<string>
 };
 
+/**
+ * 代码生成函数, 将 ast 编译成字符串, 交由 new Function 或者 eval 执行
+ */
 export function generate (
   ast: ASTElement | void,
   options: CompilerOptions
 ): CodegenResult {
+  // CodegenState 基本的功能就是根据 options 创建一个保存状态用的实例
   const state = new CodegenState(options)
+  // 将 ast 转为转为 vdom 接口所支持的参数
   const code = ast ? genElement(ast, state) : '_c("div")'
   return {
     render: `with(this){return ${code}}`,
@@ -52,6 +57,10 @@ export function generate (
   }
 }
 
+/**
+ * 根据节点的特性不同, 这些不同点是由 vue 的特性所带来的.  
+ * 编译成不同的字符串模板, 而这个字符串实际上是要交由 vdom 接口的参数
+ */
 export function genElement (el: ASTElement, state: CodegenState): string {
   if (el.parent) {
     el.pre = el.pre || el.parent.pre
@@ -72,11 +81,12 @@ export function genElement (el: ASTElement, state: CodegenState): string {
   } else {
     // component or element
     let code
-    if (el.component) {
+    if (el.component) { // 如果是组件
       code = genComponent(el.component, el, state)
-    } else {
+    } else { // 如果是元素
       let data
       if (!el.plain || (el.pre && state.maybeComponent(el))) {
+        // 将有关的状态编译成字符串
         data = genData(el, state)
       }
 
@@ -91,6 +101,9 @@ export function genElement (el: ASTElement, state: CodegenState): string {
     for (let i = 0; i < state.transforms.length; i++) {
       code = state.transforms[i](el, code)
     }
+
+    // 举一个例子, 某次结果如下 "_c('div',{attrs:{"id":"root"}},[_v("\n    "+_s(message)+"\n    "+_s(hello)+"\n  ")])"
+    // 可以看到其参数结构实际上就是 vdom 所需要的参数结构
     return code
   }
 }

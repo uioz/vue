@@ -18,9 +18,9 @@ function createFunction (code, errors) {
   }
 }
 
-// 函数名称: 创建一个将编译器转为函数的函数
-// 所以它接收一个 compile(编译器) 也就是编译函数
-// 而返回一个 "被转为函数的编译器"
+// compileToFunctions 含义为 "编译器转为渲染函数"
+// createCompileToFunctionFn 含义为 "创建编译器转为渲染函数"
+// 所以这个函数返回 compileToFunctions, 而 createCompileToFunctionFn 的作用仅仅是参数柯里化
 export function createCompileToFunctionFn (compile: Function): Function {
   const cache = Object.create(null)
 
@@ -69,13 +69,11 @@ export function createCompileToFunctionFn (compile: Function): Function {
       return cache[key]
     }
     
-    // compile
-    // 编译
+    // 对于 web 平台来说等同于执行 compile->baseCompile 函数调用
     const compiled = compile(template, options)
 
-    // check compilation errors/tips
-    // 检测编译中产生的 错误/提示
-    // 然后把他们打印到控制台中
+    // 在 compile 函数中迭代了编译出的 ast 节点
+    // 找出语法问题或者提示后挂载到了 compiled.erros 和 compiled.tips 上
     if (process.env.NODE_ENV !== 'production') {
       if (compiled.errors && compiled.errors.length) {
         if (options.outputSourceRange) {
@@ -104,13 +102,16 @@ export function createCompileToFunctionFn (compile: Function): Function {
     }
 
     // turn code into functions
-    // 将代码转为函数
+    // 将编译完成的符合 vdom 接口的字符串代码转为渲染函数
     const res = {}
     const fnGenErrors = []
-    // 将 template 转为渲染函数字符串
-    // 通过 new Function 变为函数
-    // 赋值到 res.render 上, 此时的 render 成为最终使用的 render 函数
+
+    // 将诸如
+    // with(this){return _c('div',{attrs:{"id":"root"}},[_v("\n    "+_s(message)+"\n    "+_s(hello)+"\n  ")])}
+    // 传入到 new Function() 中获取返回的函数
     res.render = createFunction(compiled.render, fnGenErrors)
+    // staticRenderFns 是一个静态渲染的集合
+    // 对于每一个元素执行系统的操作收集返回值
     res.staticRenderFns = compiled.staticRenderFns.map(code => {
       return createFunction(code, fnGenErrors)
     })
@@ -118,6 +119,8 @@ export function createCompileToFunctionFn (compile: Function): Function {
     // check function generation errors.
     // this should only happen if there is a bug in the compiler itself.
     // mostly for codegen development use
+    // 检查代码生成错误.
+    // 这种错误一般只发生在编译器自己存在问题的时候, 大部分情况是给代码生成的开发使用的.
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production') {
       if ((!compiled.errors || !compiled.errors.length) && fnGenErrors.length) {
@@ -129,6 +132,8 @@ export function createCompileToFunctionFn (compile: Function): Function {
       }
     }
 
+    // 缓存编译结果
+    // 且响应 res 对象
     return (cache[key] = res)
   }
 }

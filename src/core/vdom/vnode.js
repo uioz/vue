@@ -1,5 +1,8 @@
 /* @flow */
 
+/**
+ * vnode 虚拟 dom 上的节点
+ */
 export default class VNode {
   tag: string | void;
   data: VNodeData | void;

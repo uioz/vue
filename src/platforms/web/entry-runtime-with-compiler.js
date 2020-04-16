@@ -99,6 +99,8 @@ Vue.prototype.$mount = function (
         comments: options.comments // 当设为 true 时，将会保留且渲染模板中的 HTML 注释。默认行为是舍弃它们。
       }, this)
 
+      // 这一刻渲染函数(本质是根据 ast 所生成的调用 vdom 接口的代码)
+      // 终于和 vm 实例的 $options 属性合体 🎉
       options.render = render
       options.staticRenderFns = staticRenderFns
 

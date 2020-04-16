@@ -34,11 +34,14 @@ export const createCompiler = createCompilerCreator(function baseCompile (
     optimize(ast, options)
   }
   // ast 仅仅是模板对应的树状结构而已
-  // Vue 还需要进行下一步利用 ast 来生成
+  // 整个 generate 环节就是将 ast 转为 vdom 接口需要的参数
+  // 转换后的结果是字符串, 交由 eval 或者 new function 执行
   const code = generate(ast, options)
-  // 返回解析完成的内容
   // 对于 web 端来讲, 这个闭包函数被调用的位置在
-  // src\compiler\create-compiler.js 中
+  // src\compiler\create-compiler.js 中, 根据编译目标的不同可以动态的更改编译的各个环节
+  // 1. 整个环节
+  // 2. 编译环节
+  // 3. 代码生成环节
   return {
     ast,
     render: code.render,

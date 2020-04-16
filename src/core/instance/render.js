@@ -71,6 +71,10 @@ export function renderMixin (Vue: Class<Component>) {
     return nextTick(fn, this)
   }
 
+  /**
+   * _render 函数是 "将 ast 编译成的操作 vdom 函数生成结构的代码" 进行执行
+   * 
+   */
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options
@@ -85,14 +89,26 @@ export function renderMixin (Vue: Class<Component>) {
 
     // set parent vnode. this allows render functions to have access
     // to the data on the placeholder node.
+    // 设置为父 vnode. 这允许渲染函数可以访问占位符节点上的数据.
+    // TODO: 还不清楚这里的 "占位符" 指代的是什么.
     vm.$vnode = _parentVnode
     // render self
+    // 开始渲染
     let vnode
     try {
       // There's no need to maintain a stack because all render fns are called
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
+      // 不需要再维护一个渲染堆栈, 因为所有的渲染函数都是彼此独立调用的.
+      // 嵌套组件的渲染函数在父组件打补丁后调用.
       currentRenderingInstance = vm
+      // render 是一个匿名函数, 其中使用了 this 关键字
+      // 而 this 关键字实际上指向的就是 vm 实例
+      // 而 _renderProxy 通过名字可以看出是一层代理
+      // 这玩意儿本质访问的就是 vm 实例, 如果浏览器支持代理在 template 中访问不存在的值的时候
+      // 会在控制台中提示错误, 否则就不提示
+      // ps: 被执行的生成代码会调用诸如 _v _c _s ... 等方法这些方法可以前往
+      // src\core\instance\render-helpers\index.js 中去寻找
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)
@@ -113,10 +129,13 @@ export function renderMixin (Vue: Class<Component>) {
       currentRenderingInstance = null
     }
     // if the returned array contains only a single node, allow it
+    // 如果返回了一个长度为 1 的数组其中包含了一个元素, 允许它为 vnode
     if (Array.isArray(vnode) && vnode.length === 1) {
       vnode = vnode[0]
     }
+
     // return empty vnode in case the render function errored out
+    // 当渲染过程中发生了错误返回一个空的节点
     if (!(vnode instanceof VNode)) {
       if (process.env.NODE_ENV !== 'production' && Array.isArray(vnode)) {
         warn(
@@ -128,7 +147,10 @@ export function renderMixin (Vue: Class<Component>) {
       vnode = createEmptyVNode()
     }
     // set parent
+    // 设置父节点
     vnode.parent = _parentVnode
+
+    // 返回 vnode
     return vnode
   }
 }

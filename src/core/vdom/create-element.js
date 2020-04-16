@@ -25,6 +25,12 @@ const ALWAYS_NORMALIZE = 2
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
+/**
+ * 包装函数提供了更加灵活的接口, 还不用担心 flow 的狂轰滥炸.
+ * **注意**: 这里提供了一个 alwaysNormalize 参数, 如何参数值
+ * 1. 编译器生成的代码调用的是 _c 这个参数的值就是 false
+ * 2. 用户调用 createElement 这个参数就是 true
+ */
 export function createElement (
   context: Component,
   tag: any,
@@ -33,11 +39,14 @@ export function createElement (
   normalizationType: any,
   alwaysNormalize: boolean
 ): VNode | Array<VNode> {
+  // data 可以省略不传入, 当 data 格式为数组的时候
+  // 视为省略了 data 属性, data 实际上是 children
   if (Array.isArray(data) || isPrimitive(data)) {
     normalizationType = children
     children = data
     data = undefined
   }
+  // 如果调用是由用户通过 createElement 发起的
   if (isTrue(alwaysNormalize)) {
     normalizationType = ALWAYS_NORMALIZE
   }
@@ -51,6 +60,8 @@ export function _createElement (
   children?: any,
   normalizationType?: number
 ): VNode | Array<VNode> {
+  // 如果传入的 data 是响应式数据
+  // 停止操作进行警告返回一个空的节点
   if (isDef(data) && isDef((data: any).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
       `Avoid using observed data object as vnode data: ${JSON.stringify(data)}\n` +
@@ -61,13 +72,17 @@ export function _createElement (
   }
   // object syntax in v-bind
   if (isDef(data) && isDef(data.is)) {
+    // <component v-bind:is="currentView"></component> is 语法
     tag = data.is
   }
   if (!tag) {
     // in case of component :is set to falsy value
+    // :is 被绑定到了一个 falsy 值上返回空节点
     return createEmptyVNode()
   }
+
   // warn against non-primitive key
+  // 如果使用了一个非基础值作为 key 提示错误
   if (process.env.NODE_ENV !== 'production' &&
     isDef(data) && isDef(data.key) && !isPrimitive(data.key)
   ) {
@@ -80,6 +95,7 @@ export function _createElement (
     }
   }
   // support single function children as default scoped slot
+  // 支持 children 参数第一个参数为函数时作为默认作用域插槽
   if (Array.isArray(children) &&
     typeof children[0] === 'function'
   ) {
@@ -87,6 +103,9 @@ export function _createElement (
     data.scopedSlots = { default: children[0] }
     children.length = 0
   }
+  // 牢记用户通过 createElement 时候
+  // normalizationType === ALWAYS_NORMALIZE 在上一级调用栈
+  // 已经做了此种处理
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {

@@ -3351,6 +3351,7 @@
     normalizationType,
     alwaysNormalize
   ) {
+    debugger;
     if (Array.isArray(data) || isPrimitive(data)) {
       normalizationType = children;
       children = data;
@@ -9905,7 +9906,6 @@
         }
       }
     });
-    debugger;
     return root
   }
 
@@ -11820,7 +11820,6 @@
     if (options.optimize !== false) {
       optimize(ast, options);
     }
-    debugger;
     var code = generate(ast, options);
     return {
       ast: ast,
