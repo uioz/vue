@@ -70,11 +70,14 @@ export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
+    // 在 vm 实例建立的过程中 _vnode 被标记为 null
+    // 在首次更新的时候 vonde 的值为 null
     const prevVnode = vm._vnode
     const restoreActiveInstance = setActiveInstance(vm)
     vm._vnode = vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
+    // Vue.prototype.__patch__ 根据渲染所使用的后端在入口处注入.
     if (!prevVnode) {
       // initial render
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
@@ -221,8 +224,9 @@ export function mountComponent (
     }
   } else {
     updateComponent = () => {
-      // render 返回虚拟 dom
-      // update 利用虚拟 dom 来渲染为真实 dom
+      // _render 通过调用 vm.$options.render 方法来创建 vnode 结构
+      // 并且对 vnode 结构的生成进行优化
+      // 而 update 则通过 vnode 结构来生成对应的 dom 结构
       vm._update(vm._render(), hydrating)
     }
   }

@@ -3351,7 +3351,6 @@
     normalizationType,
     alwaysNormalize
   ) {
-    debugger;
     if (Array.isArray(data) || isPrimitive(data)) {
       normalizationType = children;
       children = data;
@@ -5847,7 +5846,7 @@
 
     var modules = backend.modules;
     var nodeOps = backend.nodeOps;
-
+    debugger
     for (i = 0; i < hooks.length; ++i) {
       cbs[hooks[i]] = [];
       for (j = 0; j < modules.length; ++j) {
@@ -5856,6 +5855,7 @@
         }
       }
     }
+    debugger;
 
     function emptyNodeAt (elm) {
       return new VNode(nodeOps.tagName(elm).toLowerCase(), {}, [], undefined, elm)

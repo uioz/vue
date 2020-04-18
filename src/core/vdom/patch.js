@@ -10,6 +10,14 @@
  * of making flow understand it is not worth it.
  */
 
+
+/**
+ * 虚拟 Dom 补丁算法基于 Snabbdom 作者 Simon Friis Vindum (@paldepind)
+ * 
+ * 被 Evan You (@yyx990803) 所修改
+ * 
+ * 不需要对此进行类型检查, 因为这个文件已经是经过测试的了, 而且对这些文件使用 flow 不值.
+ */
 import VNode, { cloneVNode } from './vnode'
 import config from '../config'
 import { SSR_ATTR } from 'shared/constants'
@@ -67,6 +75,10 @@ function createKeyToOldIdx (children, beginIdx, endIdx) {
   return map
 }
 
+/**
+ * 该函数使用 柯里化+闭包 
+ * 返回的函数作为 Vue.__patch__ 的值存在
+ */
 export function createPatchFunction (backend) {
   let i, j
   const cbs = {}
@@ -86,8 +98,8 @@ export function createPatchFunction (backend) {
   const { modules, nodeOps } = backend
 
   /**
-   * 这个流程是将 modules 中和当前对应钩子名称相同的内容
-   * 压入到 cbs 上同名的键中
+   * hooks 变量中保存了一组名词, 如果 modules 的某个元素中的键名匹配其中的名词, 
+   * 则根据这个名词压入到 cbs 上同名的键中
    * 可能的数据结构如下:
    * {
    *   create:[function(),...],
@@ -724,8 +736,14 @@ export function createPatchFunction (backend) {
     }
   }
 
-  // 闭包返回 patch 函数
+  /**
+   * 这个返回的函数作为 Vue.__patch__ 存在.  
+   * 所谓的部分算法, 简单的来说就是将两棵节点树进行比较, 然后找出不同
+   * 更新不同的地方.  
+   * 更新是复杂的因为 Dom 的改变需要触发一系列的 API 交互, 补丁算法回调用钩子来处理这些.
+   */
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
+    debugger;
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
@@ -738,16 +756,18 @@ export function createPatchFunction (backend) {
       // empty mount (likely as component), create new root element
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
-    } else {
+    } else { // 如果 oldVnode 定义了
       const isRealElement = isDef(oldVnode.nodeType)
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
         // patch existing root node
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
-      } else {
+      } else { // 如果是 oldVnode 是一个 DOM 元素 或者 不是元素但是 oldVnode 和 vnode 不是同一个
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
           // a successful hydration.
+          // 检查是否是服务端渲染内容以及我们是否可以进行执行服务端渲染
+          // 后挂载到真实的 DOM 元素上
           if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
             oldVnode.removeAttribute(SSR_ATTR)
             hydrating = true
@@ -768,6 +788,9 @@ export function createPatchFunction (backend) {
           }
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
+          // oldVnode 既不是服务端渲染,也不是混合失败
+          // 创建一个空 vnode 节点(而不是 DOM 元素节点)来替换它
+          // ps: 例如 vm 实例首次 update 会达成这个条件 
           oldVnode = emptyNodeAt(oldVnode)
         }
 
