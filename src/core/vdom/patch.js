@@ -156,6 +156,15 @@ export function createPatchFunction (backend) {
 
   let creatingElmInVPre = 0
 
+  /**
+   * 这个函数的功能是通过递归将给定的 vnode 创建与之对应的 DOM 节点
+   * 且通过 vnode.elm 进行关联
+   * @param {Element} parentElm 父级 DOM 节点
+   * @param {Element} refElm 引用的 DOM 节点(如果是首次创建 DOM 该值为 null)
+   * @param {boolean} nested 是否递归调用
+   * @param {Array<VNode>} 递归调用时所在的原数组
+   * @param {number} index 递归中这个 vnode 所在数组中的位置
+   */
   function createElm (
     vnode,
     insertedVnodeQueue,
@@ -175,6 +184,7 @@ export function createPatchFunction (backend) {
     }
 
     vnode.isRootInsert = !nested // for transition enter check
+    // TODO: 尝试创建组件, vnode 可以表示组件节点
     if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
       return
     }
@@ -182,6 +192,7 @@ export function createPatchFunction (backend) {
     const data = vnode.data
     const children = vnode.children
     const tag = vnode.tag
+    // 如果 vnode 含有 tag
     if (isDef(tag)) {
       if (process.env.NODE_ENV !== 'production') {
         if (data && data.pre) {
@@ -197,9 +208,11 @@ export function createPatchFunction (backend) {
         }
       }
 
+      // 创建 vnode 对应 TAG 的 DOM 节点与 vnode.elm 进行关联
       vnode.elm = vnode.ns
         ? nodeOps.createElementNS(vnode.ns, tag)
         : nodeOps.createElement(tag, vnode)
+      // 处理作用域 css 
       setScope(vnode)
 
       /* istanbul ignore if */
@@ -222,8 +235,11 @@ export function createPatchFunction (backend) {
           insert(parentElm, vnode.elm, refElm)
         }
       } else {
+        // 创建子节点
         createChildren(vnode, children, insertedVnodeQueue)
+        // 如果 vnode 上绑定了数据
         if (isDef(data)) {
+          // 触发 create 钩子(字面意思)
           invokeCreateHooks(vnode, insertedVnodeQueue)
         }
         insert(parentElm, vnode.elm, refElm)
@@ -232,10 +248,10 @@ export function createPatchFunction (backend) {
       if (process.env.NODE_ENV !== 'production' && data && data.pre) {
         creatingElmInVPre--
       }
-    } else if (isTrue(vnode.isComment)) {
+    } else if (isTrue(vnode.isComment)) { // 如果是注释
       vnode.elm = nodeOps.createComment(vnode.text)
       insert(parentElm, vnode.elm, refElm)
-    } else {
+    } else { // 其余的按照文本处理
       vnode.elm = nodeOps.createTextNode(vnode.text)
       insert(parentElm, vnode.elm, refElm)
     }
@@ -303,6 +319,9 @@ export function createPatchFunction (backend) {
     insert(parentElm, vnode.elm, refElm)
   }
 
+  /**
+   * 插入节点
+   */
   function insert (parent, elm, ref) {
     if (isDef(parent)) {
       if (isDef(ref)) {
@@ -315,15 +334,22 @@ export function createPatchFunction (backend) {
     }
   }
 
+  /**
+   * 为 vnode 的子节点创建对应的 DOM 节点
+   */
   function createChildren (vnode, children, insertedVnodeQueue) {
     if (Array.isArray(children)) {
       if (process.env.NODE_ENV !== 'production') {
+        // 检查 vnode 的 key 是否重复
         checkDuplicateKeys(children)
       }
+      // 为子节点递归调用 createElm
       for (let i = 0; i < children.length; ++i) {
         createElm(children[i], insertedVnodeQueue, vnode.elm, null, true, children, i)
       }
     } else if (isPrimitive(vnode.text)) {
+      // 不要忘记了用户调用的 createElement('div','hello world') 接口可以不传入数组
+      // 只传入文字这相当于 <div>hello world</div> 
       nodeOps.appendChild(vnode.elm, nodeOps.createTextNode(String(vnode.text)))
     }
   }
@@ -335,6 +361,12 @@ export function createPatchFunction (backend) {
     return isDef(vnode.tag)
   }
 
+  /**
+   * 触发监听 创建 过程的钩子, 提供一个空节点(作为旧节点)和当前节点然后去调用这些钩子.
+   * 所谓的钩子实际上是操作 DOM 的函数, 例如 更新 attr class listener 等
+   * 它们利用这两个信息去对 vnode.elm 去做处理.  
+   * 例如 create 中存在 attr 钩子, 他会将新的 attr 和旧的 attr 进行结合, 然后将部分符合条件的属性写入到 DOM 上.
+   */
   function invokeCreateHooks (vnode, insertedVnodeQueue) {
     for (let i = 0; i < cbs.create.length; ++i) {
       cbs.create[i](emptyNode, vnode)
@@ -790,7 +822,7 @@ export function createPatchFunction (backend) {
           // create an empty node and replace it
           // oldVnode 既不是服务端渲染,也不是混合失败
           // 创建一个空 vnode 节点(而不是 DOM 元素节点)来替换它
-          // ps: 例如 vm 实例首次 update 会达成这个条件 
+          // ps: 例如 vm 实例首次 update 会达成这个条件在未替换前这个 vnode 实际上是 DOM 节点
           oldVnode = emptyNodeAt(oldVnode)
         }
 

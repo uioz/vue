@@ -6030,6 +6030,7 @@
       if (isDef(parent)) {
         if (isDef(ref$$1)) {
           if (nodeOps.parentNode(ref$$1) === parent) {
+            debugger;
             nodeOps.insertBefore(parent, elm, ref$$1);
           }
         } else {
