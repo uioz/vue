@@ -238,10 +238,15 @@ export function createPatchFunction (backend) {
         // 创建子节点
         createChildren(vnode, children, insertedVnodeQueue)
         // 如果 vnode 上绑定了数据
+        // 而我们现在有了 VNode 对应的 DOM 元素
+        // 此时 DOM 元素已经被创建了且执行到了初始化阶段
+        // 我们需要将数据和 DOM 节点进行结合
+        // 例如将 data.attr 中的内容绑定到 DOM 元素上
         if (isDef(data)) {
           // 触发 create 钩子(字面意思)
           invokeCreateHooks(vnode, insertedVnodeQueue)
         }
+        // 将节点插入到 DOM 中
         insert(parentElm, vnode.elm, refElm)
       }
 
@@ -642,9 +647,14 @@ export function createPatchFunction (backend) {
   function invokeInsertHook (vnode, queue, initial) {
     // delay insert hooks for component root nodes, invoke them after the
     // element is really inserted
+    // 延迟组件的 insert 钩子的执行, 在元素确实插入后再执行插入钩子
+    // 如果这个条件成立
+    // 说明当前是 vnode 树上的一个组件
+    // 组件的 insert 钩子得父节点插入到 DOM 后才可以被触发
+    // 所以这里将 insert 的内容暂存了起来
     if (isTrue(initial) && isDef(vnode.parent)) {
       vnode.parent.data.pendingInsert = queue
-    } else {
+    } else { // 当这个分支执行的时候也就是父节点挂载到了 DOM 中, 此时按照次序执行组件的 insert 钩子
       for (let i = 0; i < queue.length; ++i) {
         queue[i].data.hook.insert(queue[i])
       }
@@ -775,7 +785,6 @@ export function createPatchFunction (backend) {
    * 更新是复杂的因为 Dom 的改变需要触发一系列的 API 交互, 补丁算法回调用钩子来处理这些.
    */
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
-    debugger;
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
@@ -786,6 +795,8 @@ export function createPatchFunction (backend) {
 
     if (isUndef(oldVnode)) {
       // empty mount (likely as component), create new root element
+      // 没有挂载点(例如组件), 创建一个新的根元素
+      // ps: 实际上根元素首次执行 patch(不是这个分支) 会删除根节点然后根据 vnode 彻底重建一份新的挂载点替换旧的挂载点.
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
     } else { // 如果 oldVnode 定义了
@@ -824,13 +835,22 @@ export function createPatchFunction (backend) {
           // 创建一个空 vnode 节点(而不是 DOM 元素节点)来替换它
           // ps: 例如 vm 实例首次 update 会达成这个条件在未替换前这个 vnode 实际上是 DOM 节点
           oldVnode = emptyNodeAt(oldVnode)
+          // 前面的几个分支都直接 return 了, 执行的是 update 操作
+          // 随后的代码执行的是 create 操作, 即通过 vnode 建立 DOM 
         }
 
         // replacing existing element
+        // 替换已经存在的元素
+        // 对于根节点的首次执行来说 oldElm 即挂载的点
+        // parentElm 即挂载点的父元素
+        // 后面会利用这两个变量来将旧的节点删除, 即删除 oldElm 所代表的节点
         const oldElm = oldVnode.elm
         const parentElm = nodeOps.parentNode(oldElm)
 
         // create new node
+        // 创建新的节点
+        // 准确的来说是给 vnode 挂载对应的 DOM 节点
+        // 如果是根节点这个函数执行完成后节点已经被插入到 DOM 中
         createElm(
           vnode,
           insertedVnodeQueue,
@@ -842,6 +862,8 @@ export function createPatchFunction (backend) {
         )
 
         // update parent placeholder node element, recursively
+        // 递归的更新父占位符(意义不明)节点元素
+        // 如果是根元素这个分支不会执行
         if (isDef(vnode.parent)) {
           let ancestor = vnode.parent
           const patchable = isPatchable(vnode)
@@ -872,6 +894,8 @@ export function createPatchFunction (backend) {
         }
 
         // destroy old node
+        // 销毁旧的节点
+        // 旧节点正式从 DOM 中移除
         if (isDef(parentElm)) {
           removeVnodes([oldVnode], 0, 0)
         } else if (isDef(oldVnode.tag)) {

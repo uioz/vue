@@ -78,6 +78,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
     // Vue.prototype.__patch__ 根据渲染所使用的后端在入口处注入.
+    // 没有 preVnode (即没有旧的 vnode) 则说明这是首次渲染
     if (!prevVnode) {
       // initial render
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
@@ -87,18 +88,23 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
     restoreActiveInstance()
     // update __vue__ reference
+    // vnode 对应的元素会和 vnode 建立关联
+    // 既然旧的元素已经消失则解除关联
     if (prevEl) {
       prevEl.__vue__ = null
     }
+    // vnode 和新的 vm 建立关联
     if (vm.$el) {
       vm.$el.__vue__ = vm
     }
     // if parent is an HOC, update its $el as well
+    // 如果父级是一个 HOC, 对父级执行同样的操作
     if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
       vm.$parent.$el = vm.$el
     }
     // updated hook is called by the scheduler to ensure that children are
     // updated in a parent's updated hook.
+    // 更新钩子被执行器调用, 确保子组件的更新钩子再父更新钩子中调用
   }
 
   Vue.prototype.$forceUpdate = function () {

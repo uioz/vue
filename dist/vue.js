@@ -1405,6 +1405,7 @@
    * Validate component names
    */
   function checkComponents (options) {
+    debugger
     for (var key in options.components) {
       validateComponentName(key);
     }
@@ -5846,7 +5847,6 @@
 
     var modules = backend.modules;
     var nodeOps = backend.nodeOps;
-    debugger
     for (i = 0; i < hooks.length; ++i) {
       cbs[hooks[i]] = [];
       for (j = 0; j < modules.length; ++j) {
@@ -5855,7 +5855,6 @@
         }
       }
     }
-    debugger;
 
     function emptyNodeAt (elm) {
       return new VNode(nodeOps.tagName(elm).toLowerCase(), {}, [], undefined, elm)
@@ -6030,7 +6029,6 @@
       if (isDef(parent)) {
         if (isDef(ref$$1)) {
           if (nodeOps.parentNode(ref$$1) === parent) {
-            debugger;
             nodeOps.insertBefore(parent, elm, ref$$1);
           }
         } else {
@@ -6456,6 +6454,7 @@
     }
 
     return function patch (oldVnode, vnode, hydrating, removeOnly) {
+      debugger;
       if (isUndef(vnode)) {
         if (isDef(oldVnode)) { invokeDestroyHook(oldVnode); }
         return

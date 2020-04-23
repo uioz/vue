@@ -11,14 +11,19 @@
 
 <body>
   <div id="root">
-    <template v-if="hello">
-      <div>{{hello}}</div>
-    </template>
-    <p>{{message}}</p>
+    <test-one :hello="message"></test-one>
   </div>
   <script>
     new Vue({
       el: '#root',
+      components:{
+        'test-one':{
+          props:{
+            hello:Number
+          },
+          template:`<div>{{ hello + 100 }}</div>`
+        }
+      },
       computed: {
         hello() {
           return this.message + 123;
@@ -27,31 +32,8 @@
       data: {
         message: 123
       },
-      mounted() {
-
-        this.message = 456;
-      }
-      // created() {
-      //   setTimeout(() => {
-      //     this.message.test = 20;
-      //   }, 200);
-      // }
-      // watch:{
-      //   message:{
-      //     deep:true,
-      //     immediate:true,
-      //     handler(value){
-      //       console.log(value);
-      //     }
-      //   }
-      // },
-      // methods: {
-      //   handleClick() {
-      //     console.log('click')
-      //   },
-      //   handleButtonClick() {
-      //     console.log('button click')
-      //   }
+      // mounted() {
+      //   this.message = 456;
       // }
     })
   </script>
