@@ -268,6 +268,12 @@ export function mountComponent (
   return vm
 }
 
+/**
+ * 功能就如同其名字一样 "更新子组件" 
+ * 这个函数会在父组件重渲染时重渲染同一个子组件时候调用.  
+ * 众所周知, 父组件的重新渲染会建立一份新的 VNode 结构, 而 VNode 上存在着组件所需要的数据(见函数参数)
+ * 这个函数就是将这个新的 VNode 上的组件所需要的数据更新到 vm 实例上.
+ */
 export function updateChildComponent (
   vm: Component,
   propsData: ?Object,

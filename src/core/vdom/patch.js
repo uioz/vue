@@ -577,6 +577,9 @@ export function createPatchFunction (backend) {
     index,
     removeOnly
   ) {
+
+    // 在 patchVnode 调用前已经执行过鸭式辨型, 这里又经过相等性判断
+    // 也就是说 VNode 完全没有发生变化没有必要进行打补丁
     if (oldVnode === vnode) {
       return
     }
@@ -618,12 +621,15 @@ export function createPatchFunction (backend) {
 
     const oldCh = oldVnode.children
     const ch = vnode.children
+    // 将新旧节点的 data 属性进行合并处理
     if (isDef(data) && isPatchable(vnode)) {
       for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode)
       if (isDef(i = data.hook) && isDef(i = i.update)) i(oldVnode, vnode)
     }
     if (isUndef(vnode.text)) {
       if (isDef(oldCh) && isDef(ch)) {
+        // 新旧子节点不同
+        // 执行核心 diff 算法
         if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly)
       } else if (isDef(ch)) {
         if (process.env.NODE_ENV !== 'production') {
@@ -801,8 +807,13 @@ export function createPatchFunction (backend) {
       createElm(vnode, insertedVnodeQueue)
     } else { // 如果 oldVnode 定义了
       const isRealElement = isDef(oldVnode.nodeType)
+      // 如果不是 DOM 元素且新旧的两个 VNode 没有发生变化
+      // 这里的变化指的是新的 VNode 和旧的一样(鸭式辨型, 不是严格意义上的相等判断)
+      // 如果新旧的两个根节点不一样没有必要执行 patch 直接通过新的 VNode 挂载到 DOM 上即可
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
         // patch existing root node
+        // 对于已经存在的根节点进行打补丁
+        // **注意**: 关键代码入口
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else { // 如果是 oldVnode 是一个 DOM 元素 或者 不是元素但是 oldVnode 和 vnode 不是同一个
         if (isRealElement) {
@@ -838,6 +849,9 @@ export function createPatchFunction (backend) {
           // 前面的几个分支都直接 return 了, 执行的是 update 操作
           // 随后的代码执行的是 create 操作, 即通过 vnode 建立 DOM 
         }
+        
+        // ---- 当前函数前半部分的代码执行的与 VNode 相关的操作 -----
+        // ---- 下半部分执行的是与 DOM 相关的操作 ----
 
         // replacing existing element
         // 替换已经存在的元素

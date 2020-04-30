@@ -1405,7 +1405,6 @@
    * Validate component names
    */
   function checkComponents (options) {
-    debugger
     for (var key in options.components) {
       validateComponentName(key);
     }
@@ -6304,11 +6303,13 @@
       var oldCh = oldVnode.children;
       var ch = vnode.children;
       if (isDef(data) && isPatchable(vnode)) {
+        debugger;
         for (i = 0; i < cbs.update.length; ++i) { cbs.update[i](oldVnode, vnode); }
         if (isDef(i = data.hook) && isDef(i = i.update)) { i(oldVnode, vnode); }
       }
       if (isUndef(vnode.text)) {
         if (isDef(oldCh) && isDef(ch)) {
+          debugger;
           if (oldCh !== ch) { updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly); }
         } else if (isDef(ch)) {
           {
@@ -6454,7 +6455,6 @@
     }
 
     return function patch (oldVnode, vnode, hydrating, removeOnly) {
-      debugger;
       if (isUndef(vnode)) {
         if (isDef(oldVnode)) { invokeDestroyHook(oldVnode); }
         return

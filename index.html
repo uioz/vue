@@ -14,27 +14,24 @@
     <test-one :hello="message"></test-one>
   </div>
   <script>
+
+
     new Vue({
       el: '#root',
-      components:{
-        'test-one':{
-          props:{
-            hello:Number
+      components: {
+        'test-one': {
+          props: {
+            hello: Number
           },
-          template:`<div>{{ hello + 100 }}</div>`
-        }
-      },
-      computed: {
-        hello() {
-          return this.message + 123;
+          template: `<div>{{ hello + 100 }}</div>`
         }
       },
       data: {
         message: 123
       },
-      // mounted() {
-      //   this.message = 456;
-      // }
+      mounted() {
+        this.message = 456;
+      }
     })
   </script>
 </body>
