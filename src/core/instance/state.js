@@ -366,10 +366,14 @@ function createComputedGetter(key) {
         watcher.evaluate()
       }
       
-      // TODO: 待证实
-      // 计算属性本身不是响应式属性, 但是可以被 Watcher 进行观察
-      // 如何做到呢? 很简单如果计算属性依赖的响应式属性去收集 "观察计算属性的 Watcher"
-      // 那么当依赖的数据发生变化, 对应的 Watcher 会被触发, 从而让计算属性重新计算
+      // 计算属性的本质就是 watcher
+      // 如果 watcher A 监听了 watcher B
+      // 而 Watcher A 被执行则调用链如下
+      // A 将自己挂载到 target 上
+      // A 执行其表达式或者render函数
+      // B 被访问, 发现 target
+      // 让 B 这个 Watcher 的 Dep 去收集 target 即 A 这个 Watcher
+      // 这样当 B 的依赖发生修改后, 则会去通知 A B 可以进行重新计算.
       if (Dep.target) {
         watcher.depend()
       }
